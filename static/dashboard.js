@@ -147,8 +147,11 @@ function initChart() {
 
 
 // ============================================================
-// 3D ROOM VISUALIZATION  (Three.js)
 // ============================================================
+// 3D ROOM VISUALIZATION  (Three.js - High Aesthetic Upgrade)
+// ============================================================
+let underDeskLight = null; // additional mood light for back wall wash
+
 function initRoom3D() {
     const canvas = document.getElementById('room3d-canvas');
     if (!canvas || typeof THREE === 'undefined') return;
@@ -162,213 +165,351 @@ function initRoom3D() {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMappingExposure = 1.05;
 
     // --- Scene ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0f4f8);
-    scene.fog = new THREE.Fog(0xf0f4f8, 12, 22);
+    scene.background = new THREE.Color(0x0f172a); // dark backdrop
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.025);
 
-    // --- Camera ---
-    const camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 50);
-    camera.position.set(0, 2.8, 6.5);
-    camera.lookAt(0, 1.2, 0);
+    // --- Camera (Premium 3/4 Corner Perspective) ---
+    const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 50);
+    camera.position.set(4.5, 3.4, 6.2);
+    camera.lookAt(-0.25, 1.25, -1.2);
 
-    // --- Materials ---
-    const floorMat  = new THREE.MeshStandardMaterial({ color: 0xc8a97e, roughness: 0.8, metalness: 0.0 });
-    const wallMat   = new THREE.MeshStandardMaterial({ color: 0xf5f0ea, roughness: 0.95 });
-    const ceilMat   = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1.0 });
-    const woodMat   = new THREE.MeshStandardMaterial({ color: 0x8b6443, roughness: 0.7 });
-    const darkMat   = new THREE.MeshStandardMaterial({ color: 0x2d2d2d, roughness: 0.5 });
-    const screenMat = new THREE.MeshStandardMaterial({ color: 0x1a2a4a, emissive: 0x1a2a4a, emissiveIntensity: 0.4, roughness: 0.3 });
-    const plantMat  = new THREE.MeshStandardMaterial({ color: 0x3a7d44, roughness: 0.9 });
-    const potMat    = new THREE.MeshStandardMaterial({ color: 0xc27b55, roughness: 0.8 });
-    const sofaMat   = new THREE.MeshStandardMaterial({ color: 0x7b9eae, roughness: 0.85 });
-    const diffMat   = new THREE.MeshStandardMaterial({ color: 0xe8e0f0, roughness: 0.3, metalness: 0.1 });
-    const lampShade = new THREE.MeshStandardMaterial({ color: 0xffd89b, emissive: 0xffd89b, emissiveIntensity: 0.6, transparent: true, opacity: 0.85 });
+    // --- Materials (Premium Design Palette) ---
+    const floorMat  = new THREE.MeshStandardMaterial({ color: 0xdfd3c3, roughness: 0.65, metalness: 0.05 }); // Light Oak
+    const wallMat   = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 }); // Slate Dark Blue feature wall
+    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.92 }); // Accent wall
+    const ceilMat   = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 1.0 });
+    const woodMat   = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.6 }); // Dark Walnut
+    const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.15, metalness: 0.1 }); // White Marble desk top
+    const brassMat  = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.25, metalness: 0.85 }); // Brushed Gold/Brass
+    const darkMat   = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.45, metalness: 0.2 }); // Matte Black
+    const screenMat = new THREE.MeshStandardMaterial({ color: 0x090d16, emissive: 0x0c1424, emissiveIntensity: 0.8, roughness: 0.2 }); // Curved OLED display
+    const plantMat  = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.8, side: THREE.DoubleSide }); // Green leaves
+    const potMat    = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3 }); // White Ceramic planter
+    const sofaMat   = new THREE.MeshStandardMaterial({ color: 0xf5f5f4, roughness: 0.9 }); // Luxury Cream Bouclé fabric
+    const rugMat    = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 1.0 }); // Soft gray woven rug
+    const diffMat   = new THREE.MeshStandardMaterial({ color: 0xfafafa, transparent: true, opacity: 0.9, roughness: 0.15, metalness: 0.1 }); // Opal glass diffuser
+    const lampShade = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 }); // Black metal shade
+    const lampInner = new THREE.MeshStandardMaterial({ color: 0xffd89b, emissive: 0xffb74d, emissiveIntensity: 1.2 }); // Warm brass reflector
 
-    // --- Room geometry ---
+    // --- Room Geometry ---
     // Floor
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(10, 0.15, 10), floorMat);
-    floor.position.set(0, -0.075, 0); floor.receiveShadow = true;
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(10, 0.1, 10), floorMat);
+    floor.position.set(0, -0.05, 0); floor.receiveShadow = true;
     scene.add(floor);
 
+    // Large Woven Rug (Circular, centers the lounge area)
+    const rug = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 0.015, 32), rugMat);
+    rug.position.set(-0.8, 0.008, -1.0); rug.receiveShadow = true;
+    scene.add(rug);
+
     // Back wall
-    const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 5, 0.15), wallMat);
+    const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 5, 0.1), wallMat);
     backWall.position.set(0, 2.5, -5); backWall.receiveShadow = true;
     scene.add(backWall);
 
     // Left wall
-    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.15, 5, 10), wallMat);
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, 5, 10), wallSideMat);
     leftWall.position.set(-5, 2.5, 0); leftWall.receiveShadow = true;
     scene.add(leftWall);
 
-    // Right wall
-    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.15, 5, 10), wallMat);
+    // Right wall (short wall to allow open camera look)
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, 5, 10), wallSideMat);
     rightWall.position.set(5, 2.5, 0); rightWall.receiveShadow = true;
     scene.add(rightWall);
 
     // Ceiling
-    const ceil = new THREE.Mesh(new THREE.BoxGeometry(10, 0.15, 10), ceilMat);
-    ceil.position.set(0, 5.075, 0);
+    const ceil = new THREE.Mesh(new THREE.BoxGeometry(10, 0.1, 10), ceilMat);
+    ceil.position.set(0, 5.05, 0);
     scene.add(ceil);
 
-    // --- Window (back wall, left side) ---
-    const windowFrame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.08), woodMat);
-    windowFrame.position.set(-2.2, 2.5, -4.93);
-    scene.add(windowFrame);
-    const windowGlass = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.9, 0.04),
-        new THREE.MeshStandardMaterial({ color: 0xa8d8f0, transparent: true, opacity: 0.35, roughness: 0.1, metalness: 0.05 }));
-    windowGlass.position.set(-2.2, 2.5, -4.93);
+    // --- Floor-to-Ceiling Window (back-left wall, sleek dark frame) ---
+    const winFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.8, 0.12), darkMat);
+    winFrame.position.set(-2.8, 1.9, -4.94);
+    scene.add(winFrame);
+
+    const windowGlass = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.6, 0.02),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, transparent: true, opacity: 0.2, roughness: 0.05, metalness: 0.1 }));
+    windowGlass.position.set(-2.8, 1.9, -4.93);
     scene.add(windowGlass);
 
-    // Outside glow light from window
-    const windowLight = new THREE.RectAreaLight(0x87ceeb, 2.5, 1.8, 1.8);
-    windowLight.position.set(-2.2, 2.5, -4.7);
-    windowLight.lookAt(-2.2, 2.5, 0);
+    // Dynamic Outside window lighting (ambient sky glow)
+    const windowLight = new THREE.RectAreaLight(0x38bdf8, 3.5, 2.2, 3.6);
+    windowLight.position.set(-2.8, 1.9, -4.8);
+    windowLight.lookAt(-2.8, 1.9, 0);
     scene.add(windowLight);
 
-    // --- Desk ---
-    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.1, 1.0), woodMat);
-    deskTop.position.set(1.2, 1.2, -3.5); deskTop.castShadow = true; deskTop.receiveShadow = true;
-    scene.add(deskTop);
-    [-0.3, 1.2].forEach((x, i) => {
-        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.2, 0.08), woodMat);
-        leg.position.set(x + (i === 0 ? -0.85 : 0.85), 0.6, -3.5); leg.castShadow = true;
-        scene.add(leg);
-    });
-    [-3.95, -3.05].forEach(z => {
-        const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.2, 0.08), woodMat);
-        leg2.position.set(1.2, 0.6, z); leg2.castShadow = true;
-        scene.add(leg2);
+    // --- Modern Framed Abstract Wall Art ---
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.2, 0.06), brassMat);
+    frame.position.set(1.4, 2.7, -4.94); frame.castShadow = true;
+    scene.add(frame);
+
+    const canvasMesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.1, 0.02), new THREE.MeshStandardMaterial({ color: 0xfaeed1, roughness: 0.95 }));
+    canvasMesh.position.set(1.4, 2.7, -4.92);
+    scene.add(canvasMesh);
+
+    // Simple abstract geometric colored planes on art canvas
+    const artColors = [0xb3c5af, 0xd4a373, 0xccd5ae, 0xe9d8a6];
+    artColors.forEach((color, i) => {
+        const shape = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.5 + i*0.2, 0.4 + i*0.3),
+            new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })
+        );
+        shape.position.set(1.4 + (i-1.5)*0.25, 2.7 + (i-1.5)*0.18, -4.90 + i*0.002);
+        shape.rotation.z = i * 0.25;
+        scene.add(shape);
     });
 
-    // Monitor
-    const monBase = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.4, 0.2), darkMat);
-    monBase.position.set(1.2, 1.45, -3.8);
-    scene.add(monBase);
-    const monScreen = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.75, 0.06), screenMat);
-    monScreen.position.set(1.2, 1.95, -3.85);
+    // --- Premium Floating Marble & Brass Desk ---
+    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 0.9), marbleMat);
+    deskTop.position.set(1.4, 1.1, -3.6); deskTop.castShadow = true; deskTop.receiveShadow = true;
+    scene.add(deskTop);
+
+    // Sleek V-shaped brass desk legs
+    [-1.0, 1.0].forEach(x => {
+        const legGroup = new THREE.Group();
+        legGroup.position.set(1.4 + x, 0.55, -3.6);
+
+        const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.1, 8), brassMat);
+        legL.rotation.z = 0.2; legL.castShadow = true;
+        const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.1, 8), brassMat);
+        legR.rotation.z = -0.2; legR.castShadow = true;
+
+        legGroup.add(legL); legGroup.add(legR);
+        scene.add(legGroup);
+    });
+
+    // Curved Ultra-Wide Monitor
+    const monStand = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.45, 8), brassMat);
+    monStand.position.set(1.4, 1.3, -3.85); monStand.castShadow = true;
+    scene.add(monStand);
+
+    const monScreen = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.6, 0.04), screenMat);
+    monScreen.position.set(1.4, 1.62, -3.85); monScreen.castShadow = true;
     scene.add(monScreen);
 
-    // Keyboard
-    const keyboard = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.04, 0.3), darkMat);
-    keyboard.position.set(1.2, 1.27, -3.3);
+    // Sleek Chic Office Chair
+    const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.06, 16), darkMat);
+    chairBase.position.set(1.4, 0.4, -2.8); chairBase.castShadow = true;
+    scene.add(chairBase);
+    const chairStem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.35, 8), brassMat);
+    chairStem.position.set(1.4, 0.6, -2.8);
+    scene.add(chairStem);
+    const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.08, 0.48), woodMat);
+    chairSeat.position.set(1.4, 0.78, -2.8); chairSeat.castShadow = true;
+    scene.add(chairSeat);
+    const chairCushion = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.06, 0.44),
+        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 }));
+    chairCushion.position.set(1.4, 0.85, -2.8);
+    scene.add(chairCushion);
+    const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.45, 0.06), woodMat);
+    chairBack.position.set(1.4, 1.1, -3.02); chairBack.rotation.x = -0.1; chairBack.castShadow = true;
+    scene.add(chairBack);
+
+    // Minimalist keyboard and trackpad
+    const keyboard = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.02, 0.22), darkMat);
+    keyboard.position.set(1.4, 1.15, -3.4);
     scene.add(keyboard);
 
-    // --- Bookshelf (right wall) ---
-    const shelfBody = new THREE.Mesh(new THREE.BoxGeometry(0.4, 2.5, 1.6), woodMat);
-    shelfBody.position.set(4.8, 1.25, -3.0); shelfBody.castShadow = true;
-    scene.add(shelfBody);
-    [0.5, 1.0, 1.5, 2.0].forEach(y => {
-        const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.04, 1.5), woodMat);
-        shelf.position.set(4.8, y, -3.0);
+    // --- Premium Bookshelf (ladder frame) ---
+    const LFrameL = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.8, 8), darkMat);
+    LFrameL.position.set(4.6, 1.4, -2.2); LFrameL.rotation.z = -0.06;
+    scene.add(LFrameL);
+    const LFrameR = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.8, 8), darkMat);
+    LFrameR.position.set(4.6, 1.4, -3.8); LFrameR.rotation.z = -0.06;
+    scene.add(LFrameR);
+
+    // Shelves and books
+    [0.6, 1.2, 1.8, 2.4].forEach((y, i) => {
+        const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.03, 1.8), woodMat);
+        shelf.position.set(4.5 - i*0.03, y, -3.0); shelf.castShadow = true;
         scene.add(shelf);
-        // Book spines
-        const colors = [0xd44, 0x44d, 0x4a4, 0xaa4, 0xd84, 0x94d];
-        let bx = -0.55;
-        for (let b = 0; b < 5; b++) {
-            const book = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.35, 0.2 + Math.random() * 0.1),
-                new THREE.MeshStandardMaterial({ color: colors[b % colors.length], roughness: 0.9 }));
-            book.position.set(4.8, y + 0.22, bx);
-            bx += 0.24;
+
+        // Books stacked and leaning
+        const bookColors = [0x50727b, 0xa25772, 0xef8052, 0x9fb5a3, 0x3a4f7c];
+        let bz = -3.7 + i*0.1;
+        for (let b = 0; b < 6; b++) {
+            const h = 0.24 + Math.random() * 0.12;
+            const w = 0.16 + Math.random() * 0.08;
+            const book = new THREE.Mesh(new THREE.BoxGeometry(0.28, h, w),
+                new THREE.MeshStandardMaterial({ color: bookColors[b % bookColors.length], roughness: 0.8 }));
+            book.position.set(4.45 - i*0.03, y + h/2, bz);
+            book.castShadow = true;
+            if (b === 5) {
+                book.rotation.z = 0.22; // leaning book!
+                book.position.y -= 0.02;
+                book.position.x -= 0.02;
+            }
+            bz += 0.26;
             scene.add(book);
         }
     });
 
-    // --- Sofa (left back) ---
-    const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.45, 0.9), sofaMat);
-    sofaBase.position.set(-2.5, 0.35, -3.3); sofaBase.castShadow = true;
+    // --- High-End Lounge Sofa (Bouclé style, left-front) ---
+    const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.32, 1.0), sofaMat);
+    sofaBase.position.set(-2.0, 0.22, -2.4); sofaBase.castShadow = true; sofaBase.receiveShadow = true;
     scene.add(sofaBase);
-    const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 0.2), sofaMat);
-    sofaBack.position.set(-2.5, 0.93, -3.7); sofaBack.castShadow = true;
-    scene.add(sofaBack);
-    [-1.3, 1.3].forEach(x => {
-        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.55, 0.9), sofaMat);
-        arm.position.set(x + (-2.5), 0.5, -3.3);
+
+    // Thick bolster arm cushions
+    [-1.0, 1.0].forEach(x => {
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.9, 16), sofaMat);
+        arm.rotation.x = Math.PI / 2;
+        arm.position.set(-2.0 + x*1.15, 0.44, -2.4); arm.castShadow = true;
         scene.add(arm);
     });
 
-    // --- Plant (corner) ---
-    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.14, 0.3, 12), potMat);
-    pot.position.set(-4.0, 0.15, -3.8); pot.castShadow = true;
+    // Sofa backrest
+    const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.65, 0.22), sofaMat);
+    sofaBack.position.set(-2.0, 0.65, -2.9); sofaBack.castShadow = true;
+    scene.add(sofaBack);
+
+    // Pillows
+    const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.18), new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.9 })); // Gold pillow
+    p1.position.set(-1.4, 0.5, -2.75); p1.rotation.y = 0.2; p1.rotation.z = 0.1;
+    scene.add(p1);
+    const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.16), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.95 })); // Dark blue pillow
+    p2.position.set(-2.4, 0.5, -2.75); p2.rotation.y = -0.15;
+    scene.add(p2);
+
+    // --- Ceramic Planter & Leafy Fiddle-Leaf Fig Plant ---
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.18, 0.55, 16), potMat);
+    pot.position.set(-4.0, 0.275, -4.0); pot.castShadow = true;
     scene.add(pot);
-    const plantBall = new THREE.Mesh(new THREE.SphereGeometry(0.45, 10, 10), plantMat);
-    plantBall.position.set(-4.0, 0.75, -3.8); plantBall.castShadow = true;
-    scene.add(plantBall);
 
-    // --- Scent Diffuser (on desk) ---
-    const diffBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.28, 12), diffMat);
-    diffBase.position.set(2.4, 1.39, -3.5);
-    scene.add(diffBase);
-    const diffTop  = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.1, 0.12, 10), diffMat);
-    diffTop.position.set(2.4, 1.59, -3.5);
-    scene.add(diffTop);
+    const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.05, 12), darkMat);
+    soil.position.set(-4.0, 0.54, -4.0);
+    scene.add(soil);
 
-    // --- Speaker (desk, left) ---
-    const speaker = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.35, 0.18), darkMat);
-    speaker.position.set(0.1, 1.43, -3.55);
-    scene.add(speaker);
+    // Branching stems and rotated plane leaves (looks far better than a simple ball)
+    const plantGroup = new THREE.Group();
+    plantGroup.position.set(-4.0, 0.55, -4.0);
 
-    // --- Ceiling lamp ---
-    const lampRod = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.6, 8), darkMat);
-    lampRod.position.set(0, 4.8, -1.5);
-    scene.add(lampRod);
-    const lampCone = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.05, 0.5, 16, 1, true), lampShade);
-    lampCone.position.set(0, 4.45, -1.5);
-    scene.add(lampCone);
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 1.4, 8), woodMat);
+    trunk.position.set(0, 0.7, 0); trunk.castShadow = true;
+    plantGroup.add(trunk);
 
-    // --- Lights ---
-    // Ambient base
-    const ambient = new THREE.AmbientLight(0xfff5e4, 0.35);
+    // Create 8 custom leaves at varying positions
+    for (let l = 0; l < 9; l++) {
+        const branchY = 0.4 + l*0.12;
+        const scale = 0.25 + l*0.03;
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(scale, 8, 8), plantMat);
+        leaf.scale.set(1.0, 0.15, 1.6);
+        leaf.position.set(
+            Math.sin(l * 1.5) * 0.15,
+            branchY,
+            Math.cos(l * 1.5) * 0.15
+        );
+        leaf.rotation.x = 0.4 + Math.random()*0.3;
+        leaf.rotation.y = l * 1.5;
+        leaf.rotation.z = 0.3;
+        leaf.castShadow = true;
+        plantGroup.add(leaf);
+    }
+    scene.add(plantGroup);
+
+    // --- Scent Diffuser (Opal Teardrop Dome, on desk) ---
+    const diff = new THREE.Group();
+    diff.position.set(2.2, 1.14, -3.6);
+
+    const dBase = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.05, 16), brassMat);
+    dBase.position.y = 0.025;
+    diff.add(dBase);
+
+    const dDome = new THREE.Mesh(new THREE.SphereGeometry(0.11, 24, 24, 0, Math.PI * 2, 0, Math.PI * 0.75), diffMat);
+    dDome.position.y = 0.12;
+    diff.add(dDome);
+
+    scene.add(diff);
+
+    // --- Premium Spherical Ambient Pendant Ceiling Lamp ---
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.4, 8), brassMat);
+    rod.position.set(0, 4.3, -2.0);
+    scene.add(rod);
+
+    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.06, 12), brassMat);
+    collar.position.set(0, 3.55, -2.0);
+    scene.add(collar);
+
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.24, 32, 32),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.1 }));
+    globe.position.set(0, 3.32, -2.0);
+    scene.add(globe);
+
+    // --- Minimalist Studio Monitor Speaker (on desk, left) ---
+    const spkr = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.32, 0.18), darkMat);
+    spkr.position.set(0.4, 1.3, -3.7); spkr.castShadow = true;
+    scene.add(spkr);
+    const spkrCone = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 12), brassMat);
+    spkrCone.rotation.x = Math.PI / 2;
+    spkrCone.position.set(0.4, 1.25, -3.6);
+    scene.add(spkrCone);
+
+    // --- Lights (Coordinated Multi-Source Setup) ---
+    // Soft overhead ambient light
+    const ambient = new THREE.AmbientLight(0x1e293b, 0.25);
     scene.add(ambient);
 
-    // Main ceiling point light (the one that changes with mood)
-    const ceilLight = new THREE.PointLight(0xffd89b, 2.5, 12);
-    ceilLight.position.set(0, 4.3, -1.5);
+    // Ceiling Pendant Point Light (the main dynamic light)
+    const ceilLight = new THREE.PointLight(0xffd89b, 2.8, 12);
+    ceilLight.position.set(0, 3.2, -2.0);
     ceilLight.castShadow = true;
     ceilLight.shadow.mapSize.width  = 1024;
     ceilLight.shadow.mapSize.height = 1024;
+    ceilLight.shadow.bias = -0.001;
     scene.add(ceilLight);
 
-    // Subtle fill from desk direction
-    const deskFill = new THREE.PointLight(0x8ab4f8, 0.5, 6);
-    deskFill.position.set(1.2, 2.2, -3.0);
-    scene.add(deskFill);
+    // Under-Desk LED mood wash light (creates a beautiful dynamic wash on the back feature wall)
+    underDeskLight = new THREE.PointLight(0xffd89b, 2.0, 5);
+    underDeskLight.position.set(1.4, 1.02, -3.95);
+    scene.add(underDeskLight);
 
-    // --- Scent particles ---
-    const PARTICLE_COUNT = 60;
+    // Soft warm fill light from front-left to ensure shadows aren't completely pitch black
+    const fillLight = new THREE.PointLight(0xfff1e0, 0.8, 10);
+    fillLight.position.set(-2.0, 2.5, 3.0);
+    scene.add(fillLight);
+
+    // --- Swirling Scent Mist Particles ---
+    const PARTICLE_COUNT = 80;
     const pPositions = new Float32Array(PARTICLE_COUNT * 3);
     const pVels = [];
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-        pPositions[i*3]   = 2.4 + (Math.random()-0.5)*0.08;
-        pPositions[i*3+1] = 1.65 + Math.random() * 0.5;
-        pPositions[i*3+2] = -3.5 + (Math.random()-0.5)*0.08;
-        pVels.push({ vx: (Math.random()-0.5)*0.005, vy: 0.008+Math.random()*0.006, vz: (Math.random()-0.5)*0.004, life: Math.random() });
+        pPositions[i*3]   = 2.2;
+        pPositions[i*3+1] = 1.3 + Math.random() * 1.5;
+        pPositions[i*3+2] = -3.6;
+        pVels.push({
+            angle: Math.random() * Math.PI * 2,
+            speed: 0.008 + Math.random()*0.008,
+            radius: 0.02 + Math.random()*0.05,
+            vx: 0,
+            vy: 0.006 + Math.random()*0.005,
+            life: Math.random()
+        });
     }
     const pGeo = new THREE.BufferGeometry();
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
-    const pMat = new THREE.PointsMaterial({ color: 0xc4b5fd, size: 0.05, transparent: true, opacity: 0.55, depthWrite: false });
+    const pMat = new THREE.PointsMaterial({ color: 0xc4b5fd, size: 0.04, transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending });
     const particles = new THREE.Points(pGeo, pMat);
     scene.add(particles);
 
     // --- Sound rings (expand from speaker) ---
     const rings = [];
     for (let r = 0; r < 4; r++) {
-        const rGeo = new THREE.RingGeometry(0.01, 0.04, 24);
-        const rMat = new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.0, side: THREE.DoubleSide });
+        const rGeo = new THREE.RingGeometry(0.01, 0.035, 24);
+        const rMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.0, side: THREE.DoubleSide });
         const ring = new THREE.Mesh(rGeo, rMat);
-        ring.position.set(0.1, 1.6, -3.4);
-        ring.rotation.y = Math.PI / 2;
+        ring.position.set(0.4, 1.25, -3.58);
+        ring.rotation.y = 0; // face camera diagonal
         ring.userData = { phase: r * 0.25, scale: 0.01 };
         scene.add(ring);
         rings.push(ring);
     }
 
-    // --- State targets for smooth lerp ---
+    // --- State targets for smooth lerping ---
     let targetLightColor = new THREE.Color(0xffd89b);
-    let targetLightIntensity = 2.5;
-    let targetFogDensity = 22;
+    let targetLightIntensity = 2.8;
     let targetParticleColor = new THREE.Color(0xc4b5fd);
     let soundActive = false;
     let scentIntensity = 0.55;
@@ -384,90 +525,100 @@ function initRoom3D() {
     }
     window.addEventListener('resize', onResize);
 
-    // --- Animate ---
+    // --- Render Loop (Smooth animations) ---
     function animate() {
         requestAnimationFrame(animate);
         const t = clock.getElapsedTime();
 
-        // Smooth lerp light toward target
-        ceilLight.color.lerp(targetLightColor, 0.03);
-        ambient.color.lerp(targetLightColor, 0.015);
-        lampShade.emissive.lerp(targetLightColor, 0.03);
-        ceilLight.intensity += (targetLightIntensity - ceilLight.intensity) * 0.03;
+        // 1. Lerp main pendant light and under-desk LED strip
+        ceilLight.color.lerp(targetLightColor, 0.025);
+        underDeskLight.color.lerp(targetLightColor, 0.025);
+        globe.material.emissive.lerp(targetLightColor, 0.025);
+        
+        ceilLight.intensity += (targetLightIntensity - ceilLight.intensity) * 0.025;
+        underDeskLight.intensity += (targetLightIntensity*0.75 - underDeskLight.intensity) * 0.025;
 
-        // Subtle lamp glow bob
-        lampCone.material.emissiveIntensity = 0.5 + 0.1 * Math.sin(t * 1.2);
-
-        // Particle animation
+        // 2. Swirling scent mist (helical path animation)
         const pos = particles.geometry.attributes.position;
         for (let i = 0; i < PARTICLE_COUNT; i++) {
-            pVels[i].life += 0.006;
-            pos.array[i*3]   += pVels[i].vx;
+            pVels[i].life += 0.005;
+            pVels[i].angle += pVels[i].speed;
+            
+            // Helix radius expands as mist goes up
+            const r = pVels[i].radius * (1.0 + (pos.array[i*3+1] - 1.3)*2.5);
+            
+            pos.array[i*3]   = 2.2 + Math.sin(pVels[i].angle + t*2) * r;
             pos.array[i*3+1] += pVels[i].vy * scentIntensity;
-            pos.array[i*3+2] += pVels[i].vz;
-            if (pVels[i].life > 1.0 || pos.array[i*3+1] > 3.5) {
-                pos.array[i*3]   = 2.4 + (Math.random()-0.5)*0.08;
-                pos.array[i*3+1] = 1.65;
-                pos.array[i*3+2] = -3.5 + (Math.random()-0.5)*0.08;
+            pos.array[i*3+2] = -3.6 + Math.cos(pVels[i].angle + t*2) * r;
+            
+            if (pVels[i].life > 1.0 || pos.array[i*3+1] > 2.8) {
+                pos.array[i*3]   = 2.2;
+                pos.array[i*3+1] = 1.25;
+                pos.array[i*3+2] = -3.6;
                 pVels[i].life = 0;
-                pVels[i].vx = (Math.random()-0.5)*0.005;
-                pVels[i].vy = 0.008 + Math.random()*0.006;
+                pVels[i].angle = Math.random() * Math.PI * 2;
             }
         }
         pos.needsUpdate = true;
         pMat.color.lerp(targetParticleColor, 0.05);
 
-        // Sound rings pulse
-        rings.forEach((ring, idx) => {
-            ring.userData.phase += soundActive ? 0.016 : 0.006;
+        // 3. Sound rings pulsing
+        rings.forEach((ring) => {
+            ring.userData.phase += soundActive ? 0.015 : 0.005;
             const p = ring.userData.phase % 1.0;
-            const sc = 0.1 + p * 2.0;
+            const sc = 0.1 + p * 3.5;
             ring.scale.set(sc, sc, sc);
             ring.material.opacity = soundActive
-                ? Math.max(0, 0.55 * (1.0 - p))
-                : Math.max(0, 0.15 * (1.0 - p));
+                ? Math.max(0, 0.7 * (1.0 - p))
+                : Math.max(0, 0.1 * (1.0 - p));
         });
 
-        // Slow camera drift for life
-        camera.position.x = Math.sin(t * 0.06) * 0.15;
-        camera.position.y = 2.8 + Math.sin(t * 0.09) * 0.04;
-        camera.lookAt(0, 1.2, 0);
+        // 4. Smooth floating camera sway
+        camera.position.x = 4.5 + Math.sin(t * 0.08) * 0.18;
+        camera.position.y = 3.4 + Math.sin(t * 0.12) * 0.06;
+        camera.lookAt(-0.25, 1.25, -1.2);
 
         renderer.render(scene, camera);
     }
     animate();
 
-    // Store reference for live updates
+    // Store references
     room3d = {
         ceilLight,
+        underDeskLight,
         ambient,
-        deskFill,
         windowLight,
         scene,
         pMat,
         particles,
         rings,
-        // Public update called from WebSocket handler
         update(rgb, lux, soundOn, scentName, tempC) {
             const r = rgb[0]/255, g = rgb[1]/255, b = rgb[2]/255;
             targetLightColor.setRGB(r, g, b);
-            // Brightness from lux: 50lux → 1.0, 400lux → 3.5
-            targetLightIntensity = 1.0 + (lux / 400) * 2.5;
+            
+            // Scaled intensity
+            targetLightIntensity = 1.2 + (lux / 400) * 2.2;
             soundActive = soundOn;
-            scentIntensity = 0.3 + Math.random() * 0.4;
-            // Scent particle color: lavender for calm, citrus-yellow for focus
+            
+            // Adjust scent intensity
+            scentIntensity = 0.4 + Math.random() * 0.4;
+            
+            // Set particle color based on scent
             if (scentName && scentName.toLowerCase().includes('lemon')) targetParticleColor.set(0xfde68a);
             else if (scentName && scentName.toLowerCase().includes('cedar')) targetParticleColor.set(0xa78f6d);
             else if (scentName && scentName.toLowerCase().includes('pine')) targetParticleColor.set(0x86efac);
             else if (scentName && scentName.toLowerCase().includes('jasmine')) targetParticleColor.set(0xfbcfe8);
-            else targetParticleColor.set(0xc4b5fd); // default lavender
-            // Window light: cooler when cold outside, warmer inside on cold days
+            else targetParticleColor.set(0xc4b5fd); // Lavender calming
+
+            // window ambient color (based on outdoor weather temp)
             const wTemp = Math.max(0, Math.min(1, (tempC - 10) / 30));
             windowLight.color.setRGB(0.53 + wTemp * 0.2, 0.81 - wTemp * 0.1, 0.94 - wTemp * 0.3);
-            // Monitor screen hint toward light color
-            screenMat.emissive.setRGB(r*0.15, g*0.15, b*0.25);
+            
+            // Screen content reacts to the mood light
+            screenMat.emissive.setRGB(r*0.12, g*0.12, b*0.2);
         }
     };
+}
 }
 
 // Called every WebSocket tick to sync room with live data
