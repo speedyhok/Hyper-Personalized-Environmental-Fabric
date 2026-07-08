@@ -21,18 +21,18 @@ let activeYTMode = "Focus";
 const playlistTracks = {
     "Focus": [
         { id: "lTRiuFIWV54", name: "Chillhop 1 A.M. Study Session" },
-        { id: "MCkBfV_ky6E", name: "Lofi Beats for Studying" },
-        { id: "3Wn7J3eTnbI", name: "Deep Focus Ambient Track" }
+        { id: "5yx6Gygb9ps", name: "Chillhop Essentials Beats" },
+        { id: "lTRiuFIWV54", name: "Lofi Focus Study Session" }
     ],
     "Calm": [
         { id: "2OEL4P1Rz04", name: "Beautiful Stress Relief Music" },
         { id: "H14bBuluRyQ", name: "Soothing Meditation Ambient" },
-        { id: "y7e-GC6oGIZ", name: "Soft Calming Piano Music" }
+        { id: "mPZkdNFkNps", name: "Gentle Rain on Window" }
     ],
     "Stress": [
         { id: "8-xIap4U9X0", name: "Liquid Mind Deep Relaxation" },
-        { id: "tibTJMol8-o", name: "Nature Forest River Sounds" },
-        { id: "Uqyco8_X7pU", name: "Tibetan Singing Bowls" }
+        { id: "Uqyco8_X7pU", name: "Tibetan Singing Bowls" },
+        { id: "2OEL4P1Rz04", name: "Calm Valley Stress Relief" }
     ]
 };
 
