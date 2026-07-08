@@ -70,6 +70,54 @@
                 </div>
             </div>
 
+            <!-- Location & Live Weather Drawer -->
+            <details class="drawer-card" style="margin-bottom: 0.75rem;">
+                <summary>📍 Location &amp; Weather</summary>
+                <div class="drawer-content">
+                    <p class="section-desc">Set your city to pull live outdoor weather. The system will adjust its comfort targets based on outside conditions.</p>
+
+                    <div class="form-group" style="margin-bottom: 0.6rem;">
+                        <label for="location-input" style="font-size: 0.65rem; font-weight:600; color:var(--color-text-sub);">City Name</label>
+                        <input
+                            type="text"
+                            id="location-input"
+                            placeholder="e.g. Tokyo, London, New York"
+                            style="width: 100%; font-size: 0.75rem; padding: 0.4rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;"
+                            onkeydown="if(event.key==='Enter') setLocation()"
+                        >
+                    </div>
+
+                    <button class="btn btn-outline save-btn" id="location-btn" onclick="setLocation()" style="width: 100%; font-size: 0.75rem; padding: 0.45rem; margin-bottom: 0.75rem;">
+                        🌍 Set Location
+                    </button>
+
+                    <!-- Live weather readout — hidden until location is set -->
+                    <div id="weather-card" style="display:none; background: linear-gradient(135deg, #e0f2fe, #f0fdf4); border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 0.72rem;">
+                        <div style="font-weight: 700; color: #0369a1; margin-bottom: 0.4rem;" id="weather-location-label">—</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem;">
+                            <div>
+                                <span style="color: #64748b;">Condition</span><br>
+                                <strong id="wx-condition">—</strong>
+                            </div>
+                            <div>
+                                <span style="color: #64748b;">Temp</span><br>
+                                <strong id="wx-temp">—</strong>
+                            </div>
+                            <div>
+                                <span style="color: #64748b;">Humidity</span><br>
+                                <strong id="wx-humidity">—</strong>
+                            </div>
+                            <div>
+                                <span style="color: #64748b;">Wind</span><br>
+                                <strong id="wx-wind">—</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="location-error" style="display:none; color: #dc2626; font-size: 0.7rem; margin-top: 0.4rem;"></div>
+                </div>
+            </details>
+
             <!-- Credentials & Webhook Settings Drawer -->
             <details class="drawer-card" style="margin-bottom: 1rem;">
                 <summary>IoT & Wearable Settings</summary>

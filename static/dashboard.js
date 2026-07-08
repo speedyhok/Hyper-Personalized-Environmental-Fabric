@@ -322,7 +322,11 @@ function updateUI(data) {
     // Context status
     document.getElementById("circadian-val").textContent = data.context.circadian_phase;
     document.getElementById("next-event-val").textContent = data.context.next_event;
-    document.getElementById("weather-val").textContent = data.context.outdoor_weather;
+    // Show location + condition in header weather stat
+    const locLabel = data.context.location && data.context.location !== 'Not set'
+        ? `${data.context.outdoor_weather} · ${data.context.location}`
+        : data.context.outdoor_weather;
+    document.getElementById("weather-val").textContent = locLabel;
     
     // Closed Loop recommendations
     document.getElementById("rec-light").textContent = data.recommendations.light;
@@ -556,6 +560,67 @@ function submitFeedback(rating) {
         logsBody.scrollTop = logsBody.scrollHeight;
     })
     .catch(err => console.error("Feedback POST failed:", err));
+}
+
+// 7. Location & Live Weather
+function setLocation() {
+    const city = document.getElementById("location-input").value.trim();
+    if (!city) return;
+
+    const btn = document.getElementById("location-btn");
+    const errDiv = document.getElementById("location-error");
+    const card = document.getElementById("weather-card");
+
+    btn.textContent = "⏳ Fetching…";
+    btn.disabled = true;
+    errDiv.style.display = "none";
+
+    fetch("/api/location", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ city })
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.textContent = "🌍 Set Location";
+        btn.disabled = false;
+
+        if (data.status === "error") {
+            errDiv.textContent = "⚠ " + data.message;
+            errDiv.style.display = "block";
+            card.style.display = "none";
+            return;
+        }
+
+        // Populate the weather card
+        const wx = data.weather;
+        document.getElementById("weather-location-label").textContent = data.location;
+        document.getElementById("wx-condition").textContent  = wx.condition;
+        document.getElementById("wx-temp").textContent       = wx.temp + "°C";
+        document.getElementById("wx-humidity").textContent   = wx.humidity + "%";
+        document.getElementById("wx-wind").textContent       = wx.wind_kph + " km/h";
+        card.style.display = "block";
+
+        // Also update the header weather stat immediately
+        const weatherEl = document.getElementById("weather-val");
+        if (weatherEl) {
+            weatherEl.textContent = `${wx.condition}, ${wx.temp}°C · ${data.location}`;
+        }
+
+        // Log to console
+        const logsBody = document.getElementById("console-logs-body");
+        if (logsBody) {
+            const t = new Date().toLocaleTimeString();
+            logsBody.textContent += `\n[${t}] [Weather] Location set: ${data.location} — ${wx.condition}, ${wx.temp}°C, Humidity ${wx.humidity}%, Wind ${wx.wind_kph} km/h`;
+            logsBody.scrollTop = logsBody.scrollHeight;
+        }
+    })
+    .catch(err => {
+        btn.textContent = "🌍 Set Location";
+        btn.disabled = false;
+        errDiv.textContent = "⚠ Network error: " + err.message;
+        errDiv.style.display = "block";
+    });
 }
 
 function saveHardwareConfig() {

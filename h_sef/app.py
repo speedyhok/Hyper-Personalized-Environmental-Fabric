@@ -101,6 +101,31 @@ def set_target_state(data: TargetStateInput):
         return {"status": "success", "target_state": rl_policy.target_state}
     return {"status": "error", "message": "Invalid target state"}
 
+
+# ---- Location & Live Weather Endpoints ----
+
+class LocationInput(BaseModel):
+    city: str
+
+@app.post("/api/location")
+def set_location(data: LocationInput):
+    """
+    Geocodes the given city name and fetches live weather from Open-Meteo.
+    Runs synchronously (fast enough for a REST call; ~200-500ms).
+    """
+    result = context_engine.update_weather_from_location(data.city.strip())
+    return result
+
+@app.get("/api/location")
+def get_location():
+    """Returns the current location and live weather snapshot."""
+    wx = context_engine.get_weather_snapshot()
+    return {
+        "location": context_engine.location_name or "Not set",
+        "weather":  wx
+    }
+
+
 # Define API models for Phase 5 Hardware
 class WearableIngestInput(BaseModel):
     heart_rate: float = None
