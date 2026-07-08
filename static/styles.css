@@ -440,6 +440,15 @@ body::after {
 .canvas-wrapper {
     height: 280px;
     position: relative;
+    width: 100%;
+}
+
+.canvas-wrapper canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 /* Circumplex Style */

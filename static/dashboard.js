@@ -29,6 +29,15 @@ document.addEventListener("DOMContentLoaded", () => {
     connectWebSocket();
     animateCircumplex();
     
+    // Force a chart resize on next paint after the DOM is ready
+    // so Chart.js has real container dimensions (not 0×0)
+    requestAnimationFrame(() => {
+        if (signalsChart) {
+            signalsChart.resize();
+            signalsChart.update();
+        }
+    });
+    
     // Load hardware config if set
     fetch("/api/config/hardware")
         .then(res => res.json())
@@ -44,13 +53,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
+
 // 1. Initialize multi-axis Chart.js for real-time wave visualization
+
 function initChart() {
     const ctx = document.getElementById("signalsChart").getContext("2d");
     
-    // Create empty initial datasets
+    // Create soft placeholder waveform so the chart is visibly rendered from the start
     const sampleCount = 100;
     const labels = Array.from({length: sampleCount}, (_, i) => "");
+    const placeholderEEG = Array.from({length: sampleCount}, (_, i) => Math.sin(i * 0.2) * 0.3);
+    const placeholderPPG = Array.from({length: sampleCount}, (_, i) => Math.sin(i * 0.15 + 1) * 0.2);
+    const placeholderGSR = Array.from({length: sampleCount}, (_, i) => Math.sin(i * 0.1 + 2) * 0.1);
 
     signalsChart = new Chart(ctx, {
         type: 'line',
@@ -63,7 +77,7 @@ function initChart() {
                     backgroundColor: 'rgba(99, 102, 241, 0.05)',
                     borderWidth: 1.5,
                     pointRadius: 0,
-                    data: Array(sampleCount).fill(0),
+                    data: placeholderEEG,
                     yAxisID: 'y-eeg'
                 },
                 {
@@ -72,7 +86,7 @@ function initChart() {
                     backgroundColor: 'transparent',
                     borderWidth: 1.5,
                     pointRadius: 0,
-                    data: Array(sampleCount).fill(0),
+                    data: placeholderPPG,
                     yAxisID: 'y-ppg'
                 },
                 {
@@ -81,7 +95,7 @@ function initChart() {
                     backgroundColor: 'transparent',
                     borderWidth: 1.5,
                     pointRadius: 0,
-                    data: Array(sampleCount).fill(0),
+                    data: placeholderGSR,
                     yAxisID: 'y-gsr'
                 }
             ]
@@ -124,6 +138,7 @@ function initChart() {
         }
     });
 }
+
 
 // 2. Initialize Circumplex Grid Canvas
 function initCircumplex() {
@@ -605,10 +620,13 @@ function switchTab(tabId, buttonElement) {
         buttonElement.classList.add("active");
     }
     
-    // Trigger Chart.js resize if the input/signals tab becomes active
+    // Trigger Chart.js resize AFTER the browser has painted the newly visible tab
+    // (requestAnimationFrame ensures the element is actually visible with real dimensions)
     if (tabId === 'input-tab' && signalsChart) {
-        signalsChart.resize();
-        signalsChart.update();
+        requestAnimationFrame(() => {
+            signalsChart.resize();
+            signalsChart.update();
+        });
     }
 }
 
