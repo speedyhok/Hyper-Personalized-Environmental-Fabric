@@ -12,23 +12,30 @@ let drawValence = 0.0;
 let drawArousal = 0.0;
 let predictedPath = [];
 
-// Web Audio API binaural beats variables
+// YouTube Sensory Player API variables
 let lastLogs = [];
-let audioCtx = null;
-let leftOsc = null;
-let rightOsc = null;
-let gainNode = null;
-let isAudioPlaying = false;
-let currentCarrierFreq = 180;
-let currentBinauralOffset = 15;
+let ytPlayer = null;
+let ytPlayerReady = false;
+let activeYTMode = "Focus";
 
-// Premium ambient soundscape synthesizer nodes
-let noiseSource = null;
-let noiseGain = null;
-let filterNode = null;
-let padOsc1 = null;
-let padOsc2 = null;
-let padGain = null;
+const playlistTracks = {
+    "Focus": [
+        { id: "jfKfPfyJRdk", name: "Lofi Girl Study Beats" },
+        { id: "4xDzrJKXOOY", name: "Synthwave Focus Radio" },
+        { id: "WPni755-Krg", name: "Ambient Deep Focus" }
+    ],
+    "Calm": [
+        { id: "77ZozI0rw7w", name: "Spa & Meditation Ambient" },
+        { id: "y7e-GC6oGIZ", name: "Soft Calming Piano" },
+        { id: "1ZYbU85DM60", name: "Deep Sleep Ocean Breeze" }
+    ],
+    "Stress": [
+        { id: "8-xIap4U9X0", name: "Liquid Mind Calming" },
+        { id: "Uqyco8_X7pU", name: "Tibetan Singing Bowls" },
+        { id: "IvjMgVS6kng", name: "Calm River Forest Nature" }
+    ]
+};
+
 
 
 // 3D Room state
@@ -884,18 +891,8 @@ function updateUI(data) {
     document.getElementById("rec-temp").textContent = data.recommendations.temp;
     document.getElementById("rec-scent").textContent = data.recommendations.scent;
 
-    // Phase 3 Synthesizer outputs & dynamic audio tuning
-    currentCarrierFreq = data.synthesis.sound.carrier_frequency;
-    currentBinauralOffset = data.synthesis.sound.binaural_offset;
-    
-    if (isAudioPlaying && leftOsc && rightOsc) {
-        leftOsc.frequency.setValueAtTime(currentCarrierFreq, audioCtx.currentTime);
-        rightOsc.frequency.setValueAtTime(currentCarrierFreq + currentBinauralOffset, audioCtx.currentTime);
-        if (padOsc1 && padOsc2) {
-            padOsc1.frequency.setValueAtTime(currentCarrierFreq * 0.5, audioCtx.currentTime);
-            padOsc2.frequency.setValueAtTime(currentCarrierFreq * 0.5 + 1.2, audioCtx.currentTime);
-        }
-    }
+    // Phase 3 YouTube Sensory Music synchronization
+    syncSensoryMusic(data.csm, data.rl_policy);
     
     // Dynamic Ambient Lighting Glow
     const rgb = data.synthesis.light.rgb;
@@ -1033,120 +1030,95 @@ function overrideActuator(temp, light, noise) {
     .catch(err => console.error("Actuator POST failed:", err));
 }
 
-function toggleAudio() {
-    const btn = document.getElementById("audio-toggle");
-    if (!isAudioPlaying) {
-        initAudio();
-        btn.textContent = "⏹ Stop Binaural Feed";
-        btn.className = "btn btn-danger";
-        isAudioPlaying = true;
+// YouTube Iframe Player API Handlers
+window.onYouTubeIframeAPIReady = function() {
+    ytPlayer = new YT.Player('yt-player-element', {
+        height: '100%',
+        width: '100%',
+        videoId: playlistTracks["Focus"][0].id,
+        playerVars: {
+            'playsinline': 1,
+            'controls': 1,
+            'disablekb': 1,
+            'rel': 0,
+            'autoplay': 0
+        },
+        events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+        }
+    });
+};
+
+function onPlayerReady(event) {
+    ytPlayerReady = true;
+    document.getElementById("track-name").textContent = playlistTracks["Focus"][0].name;
+    ytPlayer.setVolume(50);
+}
+
+function onPlayerStateChange(event) {
+    const playBtn = document.getElementById("play-btn");
+    if (event.data === YT.PlayerState.PLAYING) {
+        playBtn.textContent = "⏸ Pause";
+        playBtn.className = "btn btn-danger";
     } else {
-        try {
-            if (leftOsc) leftOsc.stop();
-            if (rightOsc) rightOsc.stop();
-            if (noiseSource) noiseSource.stop();
-            if (padOsc1) padOsc1.stop();
-            if (padOsc2) padOsc2.stop();
-        } catch (e) {
-            console.warn("Audio stop error:", e);
-        }
-        if (audioCtx) {
-            audioCtx.close();
-        }
-        btn.textContent = "🔊 Play Binaural Feed";
-        btn.className = "btn btn-outline";
-        isAudioPlaying = false;
+        playBtn.textContent = "▶ Play";
+        playBtn.className = "btn btn-outline";
     }
 }
 
-function initAudio() {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    // 1. Create a Master Lowpass Filter to soften the raw binaural tones
-    filterNode = audioCtx.createBiquadFilter();
-    filterNode.type = "lowpass";
-    filterNode.frequency.setValueAtTime(150, audioCtx.currentTime); // Low cutoff filters out harsh high frequencies
-    
-    // 2. Create Left and Right Oscillators for the Binaural beats
-    leftOsc = audioCtx.createOscillator();
-    rightOsc = audioCtx.createOscillator();
-    leftOsc.type = "sine";
-    rightOsc.type = "sine";
-    leftOsc.frequency.setValueAtTime(currentCarrierFreq, audioCtx.currentTime);
-    rightOsc.frequency.setValueAtTime(currentCarrierFreq + currentBinauralOffset, audioCtx.currentTime);
-    
-    // 3. Setup Stereo Panners for spatial isolation (Left/Right ears)
-    const leftPanner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
-    const rightPanner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
-    
-    gainNode = audioCtx.createGain();
-    gainNode.gain.setValueAtTime(0.025, audioCtx.currentTime); // Very soft volume for comfortable listening
-    
-    if (leftPanner && rightPanner) {
-        leftPanner.pan.setValueAtTime(-1, audioCtx.currentTime);
-        rightPanner.pan.setValueAtTime(1, audioCtx.currentTime);
-        
-        leftOsc.connect(leftPanner).connect(filterNode);
-        rightOsc.connect(rightPanner).connect(filterNode);
+function toggleYTPlay() {
+    if (!ytPlayerReady || !ytPlayer) return;
+    const state = ytPlayer.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) {
+        ytPlayer.pauseVideo();
     } else {
-        leftOsc.connect(filterNode);
-        rightOsc.connect(filterNode);
+        ytPlayer.playVideo();
     }
-    filterNode.connect(gainNode).connect(audioCtx.destination);
+}
+
+function setYTVolume(vol) {
+    if (ytPlayerReady && ytPlayer) {
+        ytPlayer.setVolume(vol);
+    }
+}
+
+function playRandomTrackForCurrentMode() {
+    if (!ytPlayerReady || !ytPlayer) return;
+    const tracks = playlistTracks[activeYTMode];
+    const track = tracks[Math.floor(Math.random() * tracks.length)];
+    document.getElementById("track-name").textContent = track.name;
+    ytPlayer.loadVideoById(track.id);
+}
+
+function syncSensoryMusic(csmState, rlPolicy) {
+    if (!ytPlayerReady || !ytPlayer) return;
     
-    // 4. Create Soothing Brownian Noise (Ocean Waves/Rain Sound Masking)
-    const bufferSize = 4 * audioCtx.sampleRate;
-    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    let lastOut = 0.0;
-    for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        // Brownian noise filter
-        output[i] = (lastOut + (0.02 * white)) / 1.02;
-        lastOut = output[i];
-        output[i] *= 3.5; // Compensate for volume drop
+    let targetMode = "Calm";
+    if (csmState.stress_index > 0.6) {
+        targetMode = "Stress";
+    } else if (rlPolicy.target_state === "Focus" || csmState.focus_index > 0.5) {
+        targetMode = "Focus";
     }
     
-    noiseSource = audioCtx.createBufferSource();
-    noiseSource.buffer = noiseBuffer;
-    noiseSource.loop = true;
-    
-    noiseGain = audioCtx.createGain();
-    // Subtly mask the tones with an ambient ocean rain backdrop
-    noiseGain.gain.setValueAtTime(0.015, audioCtx.currentTime);
-    
-    // Create a lowpass filter for the noise as well to make it extra deep and warm
-    const noiseFilter = audioCtx.createBiquadFilter();
-    noiseFilter.type = "lowpass";
-    noiseFilter.frequency.setValueAtTime(400, audioCtx.currentTime); // Deep rumbling rain
-    
-    noiseSource.connect(noiseFilter).connect(noiseGain).connect(audioCtx.destination);
-    
-    // 5. Create detuned warm ambient synthesiser pads
-    padOsc1 = audioCtx.createOscillator();
-    padOsc2 = audioCtx.createOscillator();
-    padOsc1.type = "triangle"; // Softer than saw/square
-    padOsc2.type = "triangle";
-    padOsc1.frequency.setValueAtTime(currentCarrierFreq * 0.5, audioCtx.currentTime); // Low octave
-    padOsc2.frequency.setValueAtTime(currentCarrierFreq * 0.5 + 1.2, audioCtx.currentTime); // Detune
-    
-    const padFilter = audioCtx.createBiquadFilter();
-    padFilter.type = "lowpass";
-    padFilter.frequency.setValueAtTime(110, audioCtx.currentTime); // Extra low-pass filters pad
-    
-    padGain = audioCtx.createGain();
-    padGain.gain.setValueAtTime(0.035, audioCtx.currentTime);
-    
-    padOsc1.connect(padFilter);
-    padOsc2.connect(padFilter);
-    padFilter.connect(padGain).connect(audioCtx.destination);
-    
-    // Start all sound generators
-    leftOsc.start();
-    rightOsc.start();
-    noiseSource.start();
-    padOsc1.start();
-    padOsc2.start();
+    if (targetMode !== activeYTMode) {
+        activeYTMode = targetMode;
+        document.getElementById("player-mode-tag").textContent = targetMode;
+        
+        // Pick a random track in the new category
+        const tracks = playlistTracks[targetMode];
+        const track = tracks[Math.floor(Math.random() * tracks.length)];
+        
+        document.getElementById("track-name").textContent = track.name;
+        
+        // Load and play automatically if already playing, or just cue it
+        const playerState = ytPlayer.getPlayerState();
+        if (playerState === YT.PlayerState.PLAYING) {
+            ytPlayer.loadVideoById(track.id);
+        } else {
+            ytPlayer.cueVideoById(track.id);
+        }
+    }
 }
 
 function setTargetState(target) {

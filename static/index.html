@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Three.js CDN for 3D Room Visualization -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <!-- YouTube Player API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     <link rel="stylesheet" href="/static/styles.css">
 
 </head>
@@ -46,9 +48,29 @@
                 </div>
             </details>
 
-            <div class="sidebar-section" style="margin-top: 1rem;">
+            <div class="sidebar-section sensory-player-card" style="margin-top: 1rem;">
                 <h3>Sensory Soundscape</h3>
-                <button class="btn btn-outline" id="audio-toggle" onclick="toggleAudio()" style="width: 100%;">🔊 Play Binaural Feed</button>
+                <div class="player-container" style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 0.6rem; border: 1px solid rgba(0,0,0,0.08);">
+                    <!-- Mini YouTube Iframe container - styled cleanly and kept tiny -->
+                    <div id="yt-player-container" style="border-radius: 6px; overflow: hidden; margin-bottom: 6px; height: 110px; background: #000; border: 1px solid rgba(255,255,255,0.1);">
+                        <div id="yt-player-element" style="width: 100%; height: 100%;"></div>
+                    </div>
+                    <div class="player-controls">
+                        <div style="font-size: 0.7rem; font-weight: 500; color: var(--color-text-sub); margin-bottom: 6px; text-align: center; line-height: 1.2;" id="player-track-info">
+                            Mode: <span id="player-mode-tag" style="font-weight: 700; color: var(--color-primary);">Focus</span><br>
+                            <span id="track-name" style="color: var(--color-text); font-weight: 600; font-size: 0.68rem;">Connecting Player...</span>
+                        </div>
+                        <div style="display: flex; gap: 0.4rem; justify-content: center; margin-bottom: 6px;">
+                            <button class="btn btn-outline" id="play-btn" onclick="toggleYTPlay()" style="padding: 0.35rem 0.6rem; font-size: 0.72rem; min-width: 60px;">▶ Play</button>
+                            <button class="btn btn-outline" id="next-btn" onclick="playRandomTrackForCurrentMode()" style="padding: 0.35rem 0.6rem; font-size: 0.72rem;">⏭ Next</button>
+                        </div>
+                        <div class="volume-slider-container" style="display: flex; align-items: center; gap: 6px; font-size: 0.65rem; color: var(--color-text-sub);">
+                            <span>🔈</span>
+                            <input type="range" id="player-volume" min="0" max="100" value="50" oninput="setYTVolume(this.value)" style="width: 100%; height: 4px; cursor: pointer; accent-color: var(--color-primary);">
+                            <span>🔊</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="sidebar-section">
@@ -179,7 +201,7 @@
             <header class="dashboard-header">
                 <div>
                     <h1>Environmental Co-Pilot Dashboard</h1>
-                    <p class="subtitle">Phase 5: Automated Closed-Loop Biophysical Pipeline</p>
+                    <p class="subtitle">Automated Closed-Loop Biophysical Pipeline</p>
                 </div>
                 <div class="header-status">
                     <div class="header-stat">
