@@ -188,8 +188,7 @@ function initRoom3D() {
     // --- Scene ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0f1d); // deep premium midnight base
-    scene.fog = new THREE.FogExp2(0x0a0f1d, 0.03);
-
+    
     // --- Camera (Premium 3/4 Corner Perspective) ---
     const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 50);
     camera.position.set(4.8, 3.2, 5.8);
@@ -197,8 +196,8 @@ function initRoom3D() {
 
     // --- Materials (Premium Design Palette) ---
     const floorMat  = new THREE.MeshStandardMaterial({ color: 0xdfd3c3, roughness: 0.6, metalness: 0.05 }); // Light Oak
-    const wallMat   = new THREE.MeshStandardMaterial({ color: 0x5b6574, roughness: 0.65 }); // Lighter chic slate feature wall (shows light washes)
-    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0x6e7887, roughness: 0.65 }); // Lighter accent walls
+    const wallMat   = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.5 }); // Gallery light feature wall (perfect for showing light washes)
+    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 0.5 }); // Accent light walls
     const ceilMat   = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 1.0 });
     const woodMat   = new THREE.MeshStandardMaterial({ color: 0x452a1e, roughness: 0.7 }); // Premium Dark Walnut
     const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.1, metalness: 0.15 }); // White Carrara marble
@@ -486,8 +485,8 @@ function initRoom3D() {
     scene.add(spkrCone);
 
     // --- Lights (Coordinated Multi-Source Setup) ---
-    // Soft overhead ambient light
-    const ambient = new THREE.AmbientLight(0x0f172a, 0.25);
+    // Soft overhead ambient light (lifted to prevent pitch-black shadows)
+    const ambient = new THREE.AmbientLight(0x475569, 0.45);
     scene.add(ambient);
 
     // Ceiling Pendant Point Light (the main dynamic light)
@@ -501,12 +500,12 @@ function initRoom3D() {
 
     // Under-Desk LED mood wash light (creates a beautiful dynamic wash on the back feature wall)
     underDeskLight = new THREE.PointLight(0xffd89b, 2.0, 5);
-    underDeskLight.position.set(1.4, 1.02, -3.95);
+    underDeskLight.position.set(1.4, 1.45, -3.8); // Shifted up to clear desk shadows
     scene.add(underDeskLight);
 
     // Behind-Sofa LED wall wash light (secondary dynamic mood source)
     behindSofaLight = new THREE.PointLight(0xffd89b, 1.8, 4.5);
-    behindSofaLight.position.set(-2.0, 0.45, -2.95);
+    behindSofaLight.position.set(-2.0, 0.95, -2.85); // Shifted up to clear sofa backrest shadows
     scene.add(behindSofaLight);
 
     // --- Swirling Scent Mist Particles ---
