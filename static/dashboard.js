@@ -196,8 +196,8 @@ function initRoom3D() {
 
     // --- Materials (Premium Design Palette) ---
     const floorMat  = new THREE.MeshStandardMaterial({ color: 0xdfd3c3, roughness: 0.6, metalness: 0.05 }); // Light Oak
-    const wallMat   = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.5 }); // Gallery light feature wall (perfect for showing light washes)
-    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 0.5 }); // Accent light walls
+    const wallMat   = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.5, side: THREE.DoubleSide }); // Gallery light feature wall (perfect for showing light washes)
+    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 0.5, side: THREE.DoubleSide }); // Accent light walls
     const ceilMat   = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 1.0 });
     const woodMat   = new THREE.MeshStandardMaterial({ color: 0x452a1e, roughness: 0.7 }); // Premium Dark Walnut
     const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.1, metalness: 0.15 }); // White Carrara marble
@@ -638,8 +638,8 @@ function initRoom3D() {
             const r = rgb[0]/255, g = rgb[1]/255, b = rgb[2]/255;
             targetLightColor.setRGB(r, g, b);
             
-            // Scaled intensity (boosted for clearer visual feedback)
-            targetLightIntensity = 1.8 + (lux / 400) * 3.2;
+            // Scaled intensity (physically-based lumens scale for modern Three.js)
+            targetLightIntensity = 150.0 + (lux / 400.0) * 350.0;
             soundActive = soundOn;
             
             // Adjust scent intensity
