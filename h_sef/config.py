@@ -28,7 +28,7 @@ EEG_BANDS = {
 # GSR Filters
 GSR_LOWPASS_CUTOFF = 0.5   # Hz (To remove high-frequency noise from skin conductance)
 
-# ---- API & Dashboard Settings ----
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = 8000
 WS_HEARTBEAT_INTERVAL = 1.0 # Seconds between WebSocket updates to frontend
+

@@ -142,27 +142,37 @@ class HardwareConfigInput(BaseModel):
 @app.post("/api/wearable/ingest")
 def ingest_wearable_data(data: dict):
     """Ingests smartwatch biometric data (from direct JSON or Sensor Logger) and overrides simulation."""
+    print(f"[DEBUG INGEST] Received payload keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
+    
     heart_rate = None
     hrv_rmssd = None
     gsr = None
     source = "Smartwatch"
 
-    if "payload" in data and isinstance(data["payload"], list):
-        # Sensor Logger format
+    if isinstance(data, dict) and "payload" in data and isinstance(data["payload"], list):
         source = data.get("deviceId", "Sensor Logger")
+        print(f"[DEBUG INGEST] Sensor Logger payload length: {len(data['payload'])}, sensors: {[x.get('name') for x in data['payload'] if isinstance(x, dict)]}")
+        
         for item in data["payload"]:
-            name = item.get("name", "")
+            if not isinstance(item, dict):
+                continue
+            name_raw = item.get("name", "")
+            name = name_raw.lower().replace("_", "").replace(" ", "")
             values = item.get("values", {})
+            if not isinstance(values, dict):
+                continue
+            
             if name == "heartrate":
-                heart_rate = values.get("bpm")
-            elif name == "hrv" or name == "hrv_rmssd":
+                heart_rate = values.get("bpm") or values.get("value")
+            elif name in ("hrv", "hrvrmssd", "rmssd"):
                 hrv_rmssd = values.get("value") or values.get("ms")
-            elif name == "gsr" or name == "skin_conductance" or name == "skinconductance":
-                gsr = values.get("value") or values.get("uS")
-    else:
+            elif name in ("gsr", "skinconductance", "eda", "electrodermalactivity"):
+                gsr = values.get("value") or values.get("us") or values.get("uS")
+    elif isinstance(data, dict):
         # Direct key-value format
         heart_rate = data.get("heart_rate") or data.get("heartRate")
         hrv_rmssd = data.get("hrv_rmssd") or data.get("hrvRmssd")
+
         gsr = data.get("gsr")
         source = data.get("source", "Smartwatch")
 
