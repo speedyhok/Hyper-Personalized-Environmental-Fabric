@@ -32,10 +32,8 @@ body {
     background-color: var(--bg-dark);
     color: var(--color-text-main);
     font-family: var(--font-main);
-    overflow-x: hidden;
-    overflow-y: auto;
-    height: auto;
-    min-height: 100vh;
+    overflow: hidden;
+    height: 100vh;
 }
 
 /* Background Gradients */
@@ -66,9 +64,9 @@ body::after {
 /* App Layout */
 .app-container {
     display: flex;
-    height: auto;
-    min-height: 100vh;
+    height: 100vh;
     width: 100vw;
+    overflow: hidden;
 }
 
 /* Sidebar Styling */
@@ -271,6 +269,7 @@ body::after {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    height: 100vh;
 }
 
 .dashboard-header {
