@@ -20,21 +20,22 @@ let activeYTMode = "Focus";
 
 const playlistTracks = {
     "Focus": [
-        { id: "jfKfPfyJRdk", name: "Lofi Girl Study Beats" },
-        { id: "4xDzrJKXOOY", name: "Synthwave Focus Radio" },
-        { id: "WPni755-Krg", name: "Ambient Deep Focus" }
+        { id: "lTRiuFIWV54", name: "Chillhop 1 A.M. Study Session" },
+        { id: "MCkBfV_ky6E", name: "Lofi Beats for Studying" },
+        { id: "3Wn7J3eTnbI", name: "Deep Focus Ambient Track" }
     ],
     "Calm": [
-        { id: "77ZozI0rw7w", name: "Spa & Meditation Ambient" },
-        { id: "y7e-GC6oGIZ", name: "Soft Calming Piano" },
-        { id: "1ZYbU85DM60", name: "Deep Sleep Ocean Breeze" }
+        { id: "2OEL4P1Rz04", name: "Beautiful Stress Relief Music" },
+        { id: "H14bBuluRyQ", name: "Soothing Meditation Ambient" },
+        { id: "y7e-GC6oGIZ", name: "Soft Calming Piano Music" }
     ],
     "Stress": [
-        { id: "8-xIap4U9X0", name: "Liquid Mind Calming" },
-        { id: "Uqyco8_X7pU", name: "Tibetan Singing Bowls" },
-        { id: "IvjMgVS6kng", name: "Calm River Forest Nature" }
+        { id: "8-xIap4U9X0", name: "Liquid Mind Deep Relaxation" },
+        { id: "tibTJMol8-o", name: "Nature Forest River Sounds" },
+        { id: "Uqyco8_X7pU", name: "Tibetan Singing Bowls" }
     ]
 };
+
 
 
 
