@@ -140,15 +140,47 @@ class HardwareConfigInput(BaseModel):
     ha_token: str = None
 
 @app.post("/api/wearable/ingest")
-def ingest_wearable_data(data: WearableIngestInput):
-    """Ingests smartwatch biometric data and overrides simulation noise."""
-    wearable_hub.register_metrics(
-        heart_rate=data.heart_rate,
-        hrv_rmssd=data.hrv_rmssd,
-        gsr=data.gsr,
-        source=data.source
-    )
-    return {"status": "success", "override_active": wearable_hub.is_active()}
+def ingest_wearable_data(data: dict):
+    """Ingests smartwatch biometric data (from direct JSON or Sensor Logger) and overrides simulation."""
+    heart_rate = None
+    hrv_rmssd = None
+    gsr = None
+    source = "Smartwatch"
+
+    if "payload" in data and isinstance(data["payload"], list):
+        # Sensor Logger format
+        source = data.get("deviceId", "Sensor Logger")
+        for item in data["payload"]:
+            name = item.get("name", "")
+            values = item.get("values", {})
+            if name == "heartrate":
+                heart_rate = values.get("bpm")
+            elif name == "hrv" or name == "hrv_rmssd":
+                hrv_rmssd = values.get("value") or values.get("ms")
+            elif name == "gsr" or name == "skin_conductance" or name == "skinconductance":
+                gsr = values.get("value") or values.get("uS")
+    else:
+        # Direct key-value format
+        heart_rate = data.get("heart_rate") or data.get("heartRate")
+        hrv_rmssd = data.get("hrv_rmssd") or data.get("hrvRmssd")
+        gsr = data.get("gsr")
+        source = data.get("source", "Smartwatch")
+
+    if heart_rate is not None or hrv_rmssd is not None or gsr is not None:
+        wearable_hub.register_metrics(
+            heart_rate=heart_rate,
+            hrv_rmssd=hrv_rmssd,
+            gsr=gsr,
+            source=source
+        )
+        return {
+            "status": "success", 
+            "override_active": wearable_hub.is_active(), 
+            "received": {"hr": heart_rate, "hrv": hrv_rmssd, "gsr": gsr}
+        }
+    
+    return {"status": "ignored", "reason": "No relevant biometric data found in payload"}
+
 
 @app.post("/api/config/hardware")
 def save_hardware_config(data: HardwareConfigInput):
