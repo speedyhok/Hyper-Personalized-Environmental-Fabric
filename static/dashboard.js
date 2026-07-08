@@ -972,11 +972,11 @@ function updateUI(data) {
             lastLogs.push(logLine);
         }
     });
-    // Keep internal buffer and UI console capped
-    if (lastLogs.length > 15) lastLogs.shift();
+    // Keep internal buffer and UI console capped (short and compact)
+    if (lastLogs.length > 5) lastLogs.shift();
     const consoleLines = logsBody.textContent.split("\n");
-    if (consoleLines.length > 25) {
-        logsBody.textContent = consoleLines.slice(consoleLines.length - 25).join("\n");
+    if (consoleLines.length > 6) {
+        logsBody.textContent = consoleLines.slice(consoleLines.length - 6).join("\n");
     }
     logsBody.scrollTop = logsBody.scrollHeight;
     

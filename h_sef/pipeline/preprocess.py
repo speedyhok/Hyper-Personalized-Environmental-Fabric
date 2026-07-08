@@ -22,6 +22,13 @@ class SignalPreprocessor:
         normal_cutoff = GSR_LOWPASS_CUTOFF / nyquist
         # 2nd order butterworth
         self.b_gsr, self.a_gsr = signal.butter(2, normal_cutoff, btype='low', analog=False)
+        
+        # History buffers for smoothing (EMA filters to prevent rapid simulated data jitter)
+        self.ema_hr = None
+        self.ema_rmssd = None
+        self.ema_tonic = None
+        self.ema_phasic = None
+        self.ema_eeg = {}
 
     def process_eeg(self, eeg_signal: np.ndarray) -> Dict[str, float]:
         """
@@ -53,7 +60,13 @@ class SignalPreprocessor:
         # Calculate relative power (proportions)
         relative_powers = {}
         for band, power in band_powers.items():
-            relative_powers[band] = float(power / total_power)
+            val = float(power / total_power)
+            # Apply EMA smoothing to the relative power to prevent rapid jumping
+            if band not in self.ema_eeg:
+                self.ema_eeg[band] = val
+            else:
+                self.ema_eeg[band] = 0.25 * val + 0.75 * self.ema_eeg[band]
+            relative_powers[band] = self.ema_eeg[band]
 
         return relative_powers
 
@@ -101,8 +114,22 @@ class SignalPreprocessor:
         else:
             rmssd = 40.0 # Normal default
             
-        features["hr"] = float(np.clip(hr, 40.0, 180.0))
-        features["rmssd"] = float(np.clip(rmssd, 5.0, 150.0))
+        hr_clipped = float(np.clip(hr, 40.0, 180.0))
+        rmssd_clipped = float(np.clip(rmssd, 5.0, 150.0))
+        
+        # Apply exponential moving average (EMA) smoothing to stabilize values
+        if self.ema_hr is None:
+            self.ema_hr = hr_clipped
+        else:
+            self.ema_hr = 0.12 * hr_clipped + 0.88 * self.ema_hr
+            
+        if self.ema_rmssd is None:
+            self.ema_rmssd = rmssd_clipped
+        else:
+            self.ema_rmssd = 0.12 * rmssd_clipped + 0.88 * self.ema_rmssd
+            
+        features["hr"] = self.ema_hr
+        features["rmssd"] = self.ema_rmssd
         
         return features
 
@@ -143,8 +170,22 @@ class SignalPreprocessor:
         # Take the root mean square or max phasic amplitude in the current window
         phasic_strength = float(np.max(np.abs(phasic)))
 
+        t_val = float(tonic[-1])
+        p_val = float(phasic_strength)
+        
+        # Apply EMA smoothing to stabilize SCL/SCR values
+        if self.ema_tonic is None:
+            self.ema_tonic = t_val
+        else:
+            self.ema_tonic = 0.08 * t_val + 0.92 * self.ema_tonic
+            
+        if self.ema_phasic is None:
+            self.ema_phasic = p_val
+        else:
+            self.ema_phasic = 0.15 * p_val + 0.85 * self.ema_phasic
+
         return {
             "gsr_clean": float(clean_gsr[-1]),
-            "tonic": float(tonic[-1]),
-            "phasic": float(phasic_strength)
+            "tonic": self.ema_tonic,
+            "phasic": self.ema_phasic
         }
