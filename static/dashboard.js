@@ -484,9 +484,8 @@ function initRoom3D() {
     spkrCone.position.set(0.4, 1.25, -3.6);
     scene.add(spkrCone);
 
-    // --- Lights (Coordinated Multi-Source Setup) ---
-    // Soft overhead ambient light (lifted to prevent pitch-black shadows)
-    const ambient = new THREE.AmbientLight(0x475569, 0.45);
+    // Soft overhead ambient light (dimmed down to prevent overexposure)
+    const ambient = new THREE.AmbientLight(0x1e293b, 0.35);
     scene.add(ambient);
 
     // Ceiling Pendant Point Light (the main dynamic light)
@@ -567,17 +566,17 @@ function initRoom3D() {
         requestAnimationFrame(animate);
         const t = clock.getElapsedTime();
 
-        // 1. Lerp main pendant light, under-desk light, behind-sofa light and ambient color
-        ceilLight.color.lerp(targetLightColor, 0.025);
-        underDeskLight.color.lerp(targetLightColor, 0.025);
-        behindSofaLight.color.lerp(targetLightColor, 0.025);
-        ambient.color.lerp(targetLightColor, 0.025);
-        globe.material.emissive.lerp(targetLightColor, 0.025);
-        globe.material.color.lerp(targetLightColor, 0.025); // Globe body tint
+        // 1. Update main pendant light, under-desk light, behind-sofa light and ambient color instantly
+        ceilLight.color.copy(targetLightColor);
+        underDeskLight.color.copy(targetLightColor);
+        behindSofaLight.color.copy(targetLightColor);
+        ambient.color.copy(targetLightColor);
+        globe.material.emissive.copy(targetLightColor);
+        globe.material.color.copy(targetLightColor); // Globe body tint
         
-        ceilLight.intensity += (targetLightIntensity - ceilLight.intensity) * 0.025;
-        underDeskLight.intensity += (targetLightIntensity * 1.6 - underDeskLight.intensity) * 0.025;
-        behindSofaLight.intensity += (targetLightIntensity * 1.4 - behindSofaLight.intensity) * 0.025;
+        ceilLight.intensity = targetLightIntensity;
+        underDeskLight.intensity = targetLightIntensity * 1.6;
+        behindSofaLight.intensity = targetLightIntensity * 1.4;
 
         // 2. Swirling scent mist (helical path animation)
         const pos = particles.geometry.attributes.position;
