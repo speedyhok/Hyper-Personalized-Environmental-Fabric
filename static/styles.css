@@ -1071,3 +1071,9 @@ body::after {
         gap: 1.5rem;
     }
 }
+
+/* Fallback visualizer animation */
+@keyframes bounce {
+    0% { height: 5px; }
+    100% { height: 35px; }
+}

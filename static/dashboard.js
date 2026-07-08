@@ -36,6 +36,23 @@ const playlistTracks = {
     ]
 };
 
+const fallbackTracks = {
+    "Focus": [
+        { url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", name: "Focus Fallback: Ambient Synth" },
+        { url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", name: "Focus Fallback: Warm Ambient" }
+    ],
+    "Calm": [
+        { url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", name: "Calm Fallback: Soothing Piano" },
+        { url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", name: "Calm Fallback: Ambient Pad" }
+    ],
+    "Stress": [
+        { url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", name: "Stress Fallback: Healing Drone" },
+        { url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3", name: "Stress Fallback: Deep Forest Rain" }
+    ]
+};
+let useFallbackAudio = false;
+let currentFallbackTrackIndex = 0;
+
 
 
 
@@ -1031,7 +1048,7 @@ function overrideActuator(temp, light, noise) {
     .catch(err => console.error("Actuator POST failed:", err));
 }
 
-// YouTube Iframe Player API Handlers
+// YouTube Iframe Player API Handlers with HTML5 Fallback
 window.onYouTubeIframeAPIReady = function() {
     ytPlayer = new YT.Player('yt-player-element', {
         height: '100%',
@@ -1046,7 +1063,8 @@ window.onYouTubeIframeAPIReady = function() {
         },
         events: {
             'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
+            'onStateChange': onPlayerStateChange,
+            'onError': onPlayerError
         }
     });
 };
@@ -1058,6 +1076,7 @@ function onPlayerReady(event) {
 }
 
 function onPlayerStateChange(event) {
+    if (useFallbackAudio) return;
     const playBtn = document.getElementById("play-btn");
     if (event.data === YT.PlayerState.PLAYING) {
         playBtn.textContent = "⏸ Pause";
@@ -1068,7 +1087,50 @@ function onPlayerStateChange(event) {
     }
 }
 
+function onPlayerError(event) {
+    console.warn("YouTube player returned error (code " + event.data + "). Toggling HTML5 audio fallback stream...");
+    activateFallbackAudio();
+}
+
+function activateFallbackAudio() {
+    useFallbackAudio = true;
+    document.getElementById("audio-visualizer-container").style.display = "flex";
+    document.getElementById("yt-player-element").style.display = "none";
+    
+    const tracks = fallbackTracks[activeYTMode];
+    const track = tracks[currentFallbackTrackIndex];
+    document.getElementById("track-name").textContent = track.name;
+    
+    const audioEl = document.getElementById("fallback-audio");
+    audioEl.src = track.url;
+    audioEl.volume = document.getElementById("player-volume").value / 100;
+    
+    const playBtn = document.getElementById("play-btn");
+    playBtn.textContent = "⏸ Pause";
+    playBtn.className = "btn btn-danger";
+    
+    audioEl.play().catch(err => {
+        console.warn("Audio autoplay blocked, cued track instead:", err);
+        playBtn.textContent = "▶ Play";
+        playBtn.className = "btn btn-outline";
+    });
+}
+
 function toggleYTPlay() {
+    if (useFallbackAudio) {
+        const audioEl = document.getElementById("fallback-audio");
+        const playBtn = document.getElementById("play-btn");
+        if (audioEl.paused) {
+            audioEl.play().catch(err => console.error(err));
+            playBtn.textContent = "⏸ Pause";
+            playBtn.className = "btn btn-danger";
+        } else {
+            audioEl.pause();
+            playBtn.textContent = "▶ Play";
+            playBtn.className = "btn btn-outline";
+        }
+        return;
+    }
     if (!ytPlayerReady || !ytPlayer) return;
     const state = ytPlayer.getPlayerState();
     if (state === YT.PlayerState.PLAYING) {
@@ -1082,9 +1144,24 @@ function setYTVolume(vol) {
     if (ytPlayerReady && ytPlayer) {
         ytPlayer.setVolume(vol);
     }
+    const audioEl = document.getElementById("fallback-audio");
+    if (audioEl) {
+        audioEl.volume = vol / 100;
+    }
 }
 
 function playRandomTrackForCurrentMode() {
+    if (useFallbackAudio) {
+        const tracks = fallbackTracks[activeYTMode];
+        currentFallbackTrackIndex = (currentFallbackTrackIndex + 1) % tracks.length;
+        const track = tracks[currentFallbackTrackIndex];
+        document.getElementById("track-name").textContent = track.name;
+        
+        const audioEl = document.getElementById("fallback-audio");
+        audioEl.src = track.url;
+        audioEl.play().catch(err => console.error(err));
+        return;
+    }
     if (!ytPlayerReady || !ytPlayer) return;
     const tracks = playlistTracks[activeYTMode];
     const track = tracks[Math.floor(Math.random() * tracks.length)];
@@ -1093,8 +1170,6 @@ function playRandomTrackForCurrentMode() {
 }
 
 function syncSensoryMusic(csmState, rlPolicy) {
-    if (!ytPlayerReady || !ytPlayer) return;
-    
     let targetMode = "Calm";
     if (csmState.stress_index > 0.6) {
         targetMode = "Stress";
@@ -1106,18 +1181,36 @@ function syncSensoryMusic(csmState, rlPolicy) {
         activeYTMode = targetMode;
         document.getElementById("player-mode-tag").textContent = targetMode;
         
-        // Pick a random track in the new category
+        if (useFallbackAudio) {
+            const tracks = fallbackTracks[targetMode];
+            currentFallbackTrackIndex = 0;
+            const track = tracks[currentFallbackTrackIndex];
+            document.getElementById("track-name").textContent = track.name;
+            
+            const audioEl = document.getElementById("fallback-audio");
+            const isPlaying = !audioEl.paused;
+            audioEl.src = track.url;
+            if (isPlaying) {
+                audioEl.play().catch(err => console.error(err));
+            }
+            return;
+        }
+        
+        if (!ytPlayerReady || !ytPlayer) return;
         const tracks = playlistTracks[targetMode];
         const track = tracks[Math.floor(Math.random() * tracks.length)];
-        
         document.getElementById("track-name").textContent = track.name;
         
-        // Load and play automatically if already playing, or just cue it
-        const playerState = ytPlayer.getPlayerState();
-        if (playerState === YT.PlayerState.PLAYING) {
-            ytPlayer.loadVideoById(track.id);
-        } else {
-            ytPlayer.cueVideoById(track.id);
+        try {
+            const playerState = ytPlayer.getPlayerState();
+            if (playerState === YT.PlayerState.PLAYING) {
+                ytPlayer.loadVideoById(track.id);
+            } else {
+                ytPlayer.cueVideoById(track.id);
+            }
+        } catch (e) {
+            console.warn("YouTube sync failed, falling back:", e);
+            activateFallbackAudio();
         }
     }
 }
