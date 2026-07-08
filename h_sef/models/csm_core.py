@@ -10,8 +10,17 @@ Implements:
 import math
 from typing import Dict, Any, List, Tuple
 import numpy as np
-import torch
-import torch.nn as nn
+
+try:
+    import torch
+    import torch.nn as nn
+    HAS_TORCH = True
+except ImportError:
+    HAS_TORCH = False
+    # Mock base classes to avoid runtime inheritance crashes
+    class nn:
+        class Module:
+            pass
 
 class CognitiveStateSequencePredictor(nn.Module):
     def __init__(self, input_dim: int = 11, hidden_dim: int = 16, output_dim: int = 3):
@@ -31,12 +40,13 @@ class CognitiveStateSequencePredictor(nn.Module):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         
-        self.lstm = nn.LSTM(input_dim, hidden_dim, batch_first=True)
-        self.fc = nn.Linear(hidden_dim, output_dim)
-        
-        # Initialize with meaningful weights to generate realistic predictions
-        # (Simulating a pre-trained network)
-        self._initialize_synthetic_weights()
+        if HAS_TORCH:
+            self.lstm = nn.LSTM(input_dim, hidden_dim, batch_first=True)
+            self.fc = nn.Linear(hidden_dim, output_dim)
+            
+            # Initialize with meaningful weights to generate realistic predictions
+            # (Simulating a pre-trained network)
+            self._initialize_synthetic_weights()
 
     def _initialize_synthetic_weights(self):
         # We set positive/negative weights to simulate physiological dynamics
@@ -69,6 +79,35 @@ class CognitiveStateSequencePredictor(nn.Module):
         last_out = lstm_out[:, -1, :]
         return self.fc(last_out)
 
+    def __call__(self, x):
+        if HAS_TORCH:
+            return super().__call__(x)
+        else:
+            return self.predict_numpy(x)
+
+    def predict_numpy(self, sequence_np: np.ndarray) -> np.ndarray:
+        """
+        Pure NumPy simulation of LSTM forward pass.
+        Returns an array of shape (3,) representing [Valence, Arousal, Cognitive Load].
+        """
+        # sequence_np shape: [seq_len, input_dim] (typically [10, 11])
+        last_step = sequence_np[-1]
+        
+        # Physiological rules to map inputs to cognitive state
+        # 1. Valence: goes down with HR (col 3), GSR Tonic (col 5), and Calendar Stress (col 10)
+        valence = float(0.15 - 0.25 * float(last_step[3]) - 0.2 * float(last_step[5]) - 0.3 * float(last_step[10]))
+        # 2. Arousal: goes up with HR (col 3), GSR Phasic (col 6), Noise (col 9), and Calendar Stress (col 10)
+        arousal = float(0.2 * float(last_step[3]) + 0.35 * float(last_step[6]) + 0.1 * float(last_step[9]) + 0.3 * float(last_step[10]))
+        # 3. Cognitive Load: goes up with EEG Beta (col 1), EEG Theta (col 2), and Calendar Stress (col 10)
+        cognitive_load = float(0.3 * float(last_step[1]) + 0.45 * float(last_step[2]) + 0.25 * float(last_step[10]))
+        
+        # Bounded targets
+        valence = max(-1.0, min(1.0, valence))
+        arousal = max(-1.0, min(1.0, arousal))
+        cognitive_load = max(0.0, min(1.0, cognitive_load))
+        
+        return np.array([valence, arousal, cognitive_load])
+
     def calculate_causal_attribution(self, sequence_np: np.ndarray) -> Dict[str, float]:
         """
         Calculates gradient-based causal attribution of predicted stress.
@@ -80,6 +119,21 @@ class CognitiveStateSequencePredictor(nn.Module):
         Returns:
             attribution_percentages: Dict mapping causes to percentages
         """
+        if not HAS_TORCH:
+            # Rule-based fallback when PyTorch is not available
+            last_step = np.abs(sequence_np[-1])
+            
+            workload_score = float(last_step[0] + last_step[1] + last_step[2] + last_step[10]) + 0.1
+            env_score = float(last_step[7] + last_step[8] + last_step[9]) + 0.1
+            physio_score = float(last_step[3] + last_step[4] + last_step[5] + last_step[6]) + 0.1
+            
+            total = workload_score + env_score + physio_score
+            return {
+                "workload": round((workload_score / total) * 100, 1),
+                "environment": round((env_score / total) * 100, 1),
+                "physiology": round((physio_score / total) * 100, 1)
+            }
+            
         # Convert to tensor and enable gradient tracking
         x = torch.tensor(sequence_np, dtype=torch.float32).unsqueeze(0)  # Shape [1, seq_len, input_dim]
         x.requires_grad = True

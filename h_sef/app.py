@@ -12,7 +12,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import numpy as np
-import torch
+try:
+    import torch
+except ImportError:
+    pass
 
 from h_sef.config import HOST, PORT, WS_HEARTBEAT_INTERVAL
 from h_sef.pipeline.stream import BiometricSimulator
@@ -386,13 +389,18 @@ async def websocket_endpoint(websocket: WebSocket):
                 # 8. Causal attribution (Saliency mapping)
                 causal_attr = csm_predictor.calculate_causal_attribution(seq_matrix)
                 
-                # 9. Predict future user states (PyTorch LSTM forward inference)
-                with torch.no_grad():
-                    seq_tensor = torch.tensor(seq_matrix, dtype=torch.float32).unsqueeze(0)
-                    pred_out = csm_predictor(seq_tensor)[0].numpy()
-                    pred_v = float(np.clip(csm_state["valence"] + pred_out[0]*0.1, -1.0, 1.0))
-                    pred_a = float(np.clip(csm_state["arousal"] + pred_out[1]*0.1, -1.0, 1.0))
-                    pred_cl = float(np.clip(csm_state["cognitive_load"] + pred_out[2]*0.05, 0.0, 1.0))
+                # 9. Predict future user states (PyTorch LSTM forward inference fallback to NumPy)
+                from h_sef.models.csm_core import HAS_TORCH
+                if HAS_TORCH:
+                    with torch.no_grad():
+                        seq_tensor = torch.tensor(seq_matrix, dtype=torch.float32).unsqueeze(0)
+                        pred_out = csm_predictor(seq_tensor)[0].numpy()
+                else:
+                    pred_out = csm_predictor.predict_numpy(seq_matrix)
+                    
+                pred_v = float(np.clip(csm_state["valence"] + pred_out[0]*0.1, -1.0, 1.0))
+                pred_a = float(np.clip(csm_state["arousal"] + pred_out[1]*0.1, -1.0, 1.0))
+                pred_cl = float(np.clip(csm_state["cognitive_load"] + pred_out[2]*0.05, 0.0, 1.0))
                     
                 # 10. Generate interpolated transition paths
                 start_coord = (csm_state["valence"], csm_state["arousal"])
