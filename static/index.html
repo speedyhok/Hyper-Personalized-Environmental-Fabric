@@ -325,24 +325,7 @@
             <!-- PAGE 2: CONTROL OUTPUT & ACTUATORS -->
             <div id="output-tab" class="tab-content">
 
-                <!-- 3D Room Visualization - Full Width -->
-                <div class="glass-card" style="margin-bottom: 1rem; padding: 0; overflow: hidden; border-radius: 14px; position: relative;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem 0.5rem; background: rgba(255,255,255,0.6); border-bottom: 1px solid rgba(0,0,0,0.06);">
-                        <div style="display:flex; align-items:center; gap:0.6rem;">
-                            <h3 style="margin:0; font-size:0.9rem; font-weight:600;">🏠 Live Sensory Room</h3>
-                            <span class="pill glow" style="font-size:0.65rem;">Real-Time 3D Preview</span>
-                        </div>
-                        <div style="display:flex; gap:1.2rem; font-size:0.72rem; color:#64748b;">
-                            <span>💡 <strong id="room-light-label" style="color:#1e293b;">--</strong></span>
-                            <span>🌡️ <strong id="room-temp-label" style="color:#1e293b;">--</strong></span>
-                            <span>💨 <strong id="room-scent-label" style="color:#1e293b;">--</strong></span>
-                            <span>🎵 <strong id="room-sound-label" style="color:#1e293b;">--</strong></span>
-                        </div>
-                    </div>
-                    <canvas id="room3d-canvas" style="width:100%; height:380px; display:block;"></canvas>
-                </div>
-
-                <!-- Bottom Two-Column Grid -->
+                <!-- Top Two-Column Grid -->
                 <div class="tab-columns-grid">
                     <!-- Left Column: Ambient Stats & Actuators -->
                     <div class="tab-column">
@@ -442,7 +425,26 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 3D Room Visualization - Full Width (now below the grid) -->
+                <div class="glass-card" style="margin-top: 1rem; margin-bottom: 1rem; padding: 0; overflow: hidden; border-radius: 14px; position: relative;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem 0.5rem; background: rgba(255,255,255,0.6); border-bottom: 1px solid rgba(0,0,0,0.06);">
+                        <div style="display:flex; align-items:center; gap:0.6rem;">
+                            <h3 style="margin:0; font-size:0.9rem; font-weight:600;">🏠 Live Sensory Room</h3>
+                            <span class="pill glow" style="font-size:0.65rem;">Real-Time 3D Preview</span>
+                        </div>
+                        <div style="display:flex; gap:1.2rem; font-size:0.72rem; color:#64748b;">
+                            <span>💡 <strong id="room-light-label" style="color:#1e293b;">--</strong></span>
+                            <span>🌡️ <strong id="room-temp-label" style="color:#1e293b;">--</strong></span>
+                            <span>💨 <strong id="room-scent-label" style="color:#1e293b;">--</strong></span>
+                            <span>🎵 <strong id="room-sound-label" style="color:#1e293b;">--</strong></span>
+                        </div>
+                    </div>
+                    <canvas id="room3d-canvas" style="width:100%; height:380px; display:block;"></canvas>
+                </div>
+
             </div>
+
         </main>
     </div>
 
