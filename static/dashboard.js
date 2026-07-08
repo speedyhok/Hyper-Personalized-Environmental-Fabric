@@ -197,8 +197,8 @@ function initRoom3D() {
 
     // --- Materials (Premium Design Palette) ---
     const floorMat  = new THREE.MeshStandardMaterial({ color: 0xdfd3c3, roughness: 0.6, metalness: 0.05 }); // Light Oak
-    const wallMat   = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.95 }); // Slate Dark feature wall
-    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.95 }); // Accent walls
+    const wallMat   = new THREE.MeshStandardMaterial({ color: 0x5b6574, roughness: 0.65 }); // Lighter chic slate feature wall (shows light washes)
+    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0x6e7887, roughness: 0.65 }); // Lighter accent walls
     const ceilMat   = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 1.0 });
     const woodMat   = new THREE.MeshStandardMaterial({ color: 0x452a1e, roughness: 0.7 }); // Premium Dark Walnut
     const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.1, metalness: 0.15 }); // White Carrara marble
@@ -577,8 +577,8 @@ function initRoom3D() {
         globe.material.color.lerp(targetLightColor, 0.025); // Globe body tint
         
         ceilLight.intensity += (targetLightIntensity - ceilLight.intensity) * 0.025;
-        underDeskLight.intensity += (targetLightIntensity*0.85 - underDeskLight.intensity) * 0.025;
-        behindSofaLight.intensity += (targetLightIntensity*0.75 - behindSofaLight.intensity) * 0.025;
+        underDeskLight.intensity += (targetLightIntensity * 1.6 - underDeskLight.intensity) * 0.025;
+        behindSofaLight.intensity += (targetLightIntensity * 1.4 - behindSofaLight.intensity) * 0.025;
 
         // 2. Swirling scent mist (helical path animation)
         const pos = particles.geometry.attributes.position;
@@ -639,8 +639,8 @@ function initRoom3D() {
             const r = rgb[0]/255, g = rgb[1]/255, b = rgb[2]/255;
             targetLightColor.setRGB(r, g, b);
             
-            // Scaled intensity
-            targetLightIntensity = 1.2 + (lux / 400) * 2.2;
+            // Scaled intensity (boosted for clearer visual feedback)
+            targetLightIntensity = 1.8 + (lux / 400) * 3.2;
             soundActive = soundOn;
             
             // Adjust scent intensity
