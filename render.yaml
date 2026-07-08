@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: h-sef-edge-fabric
+    env: python
+    buildCommand: "chmod +x build.sh && ./build.sh"
+    startCommand: "python run.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
