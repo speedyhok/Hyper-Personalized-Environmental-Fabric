@@ -195,9 +195,9 @@ function initRoom3D() {
     camera.lookAt(-0.3, 1.2, -1.1);
 
     // --- Materials (Premium Design Palette) ---
-    const floorMat  = new THREE.MeshStandardMaterial({ color: 0xdfd3c3, roughness: 0.6, metalness: 0.05 }); // Light Oak
-    const wallMat   = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.7, side: THREE.DoubleSide }); // Slate gray feature wall (reduces overexposure)
-    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0x5f6c7d, roughness: 0.7, side: THREE.DoubleSide }); // Medium accent walls
+    const floorMat  = new THREE.MeshStandardMaterial({ color: 0x8a7b6c, roughness: 0.85, metalness: 0.05 }); // Dark Walnut Wood
+    const wallMat   = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.7, side: THREE.DoubleSide }); // Slate gray feature wall
+    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0x374151, roughness: 0.7, side: THREE.DoubleSide }); // Dark charcoal accent walls
     const ceilMat   = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 1.0 });
     const woodMat   = new THREE.MeshStandardMaterial({ color: 0x452a1e, roughness: 0.7 }); // Premium Dark Walnut
     const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.1, metalness: 0.15 }); // White Carrara marble
@@ -206,8 +206,8 @@ function initRoom3D() {
     const screenMat = new THREE.MeshStandardMaterial({ color: 0x090d16, emissive: 0x0c1424, emissiveIntensity: 1.2, roughness: 0.2 }); // Curved OLED display
     const plantMat  = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85, side: THREE.DoubleSide }); // Fiddle-leaf green
     const potMat    = new THREE.MeshStandardMaterial({ color: 0xf3f4f6, roughness: 0.4 }); // White Ceramic planter
-    const sofaMat   = new THREE.MeshStandardMaterial({ color: 0xf5f5f4, roughness: 0.9 }); // Cream Bouclé fabric
-    const rugMat    = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 1.0 }); // Soft woven rug
+    const sofaMat   = new THREE.MeshStandardMaterial({ color: 0x78716c, roughness: 0.95 }); // Slate grey Bouclé fabric
+    const rugMat    = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 1.0 }); // Soft woven charcoal rug
     const diffMat   = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.92, roughness: 0.1 }); // Opal glass diffuser
     const globeMat   = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.2, roughness: 0.1 }); // Light globe
 
@@ -252,8 +252,8 @@ function initRoom3D() {
     windowGlass.position.set(-2.8, 1.9, -4.93);
     scene.add(windowGlass);
 
-    // Dynamic Outside window lighting (ambient sky glow)
-    const windowLight = new THREE.RectAreaLight(0x38bdf8, 4.0, 2.2, 3.6);
+    // Dynamic Outside window lighting (ambient sky glow - dimmed to prevent glare)
+    const windowLight = new THREE.RectAreaLight(0x38bdf8, 0.8, 2.2, 3.6);
     windowLight.position.set(-2.8, 1.9, -4.8);
     windowLight.lookAt(-2.8, 1.9, 0);
     scene.add(windowLight);
