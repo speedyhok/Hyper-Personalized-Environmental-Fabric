@@ -19,7 +19,7 @@ class SmartLightingBridge(BaseActuator):
         lux = payload.get("lux", 250.0)
         rgb = payload.get("rgb", (255, 255, 255))
         
-        cmd_str = f"[Matter Light] POST http://192.168.1.50/api/lights/state -> CCT: {cct}K, Lux: {int(lux)}, RGB: {rgb}"
+        cmd_str = f"[Simulated Light] State updated -> CCT: {cct}K, Lux: {int(lux)}, RGB: {rgb} (No physical bridge connected)"
         self.last_command = {
             "protocol": "Matter/CoAP",
             "endpoint": "http://192.168.1.50/api/lights/state",
@@ -35,7 +35,7 @@ class ClimateController(BaseActuator):
     def send_command(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         temp = payload.get("temp", 22.0)
         
-        cmd_str = f"[MQTT HVAC] PUBLISH hvac/set/temperature -> Target: {temp}°C"
+        cmd_str = f"[Simulated Climate] HVAC target set -> {temp}°C (No physical thermostat connected)"
         self.last_command = {
             "protocol": "MQTT",
             "topic": "hvac/set/temperature",
@@ -51,7 +51,7 @@ class ScentDiffuser(BaseActuator):
     def send_command(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         scent = payload.get("scent", "Neutral")
         
-        cmd_str = f"[ESP32 Diffuser] WS send ws://192.168.1.80/control -> Scent: {scent}, Misting: 3000ms"
+        cmd_str = f"[Simulated Scent] Diffuser status -> Scent: {scent} (No physical diffuser connected)"
         self.last_command = {
             "protocol": "WebSocket",
             "url": "ws://192.168.1.80/control",
@@ -59,3 +59,4 @@ class ScentDiffuser(BaseActuator):
             "log": cmd_str
         }
         return self.last_command
+
