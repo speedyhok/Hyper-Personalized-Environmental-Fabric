@@ -619,7 +619,6 @@ function initRoom3D() {
         }
     };
 }
-}
 
 // Called every WebSocket tick to sync room with live data
 function updateRoom3D(data) {
