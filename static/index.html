@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H-SEF Dashboard | Hyper-Personalized Sensory Environment Fabric</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation & Controls -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="logo-icon">▲</span>
+                <h2>H-SEF OS</h2>
+                <span class="version">v1.0.0-alpha</span>
+            </div>
+
+            <!-- Simulation Controls Collapsible Drawer -->
+            <details class="drawer-card" open>
+                <summary>Simulation Controls</summary>
+                <div class="drawer-content">
+                    <p class="section-desc">Inject physiological stressors or trigger environmental actuator events to test the closed-loop optimization.</p>
+                    
+                    <div class="control-group">
+                        <label>Force User Stress</label>
+                        <button class="btn btn-danger" onclick="setStressor(0.9, 0.2)" style="width:100%; padding:0.4rem; font-size:0.75rem; margin-bottom:4px;">Trigger High Stress</button>
+                        <button class="btn btn-success" onclick="setStressor(0.1, 0.9)" style="width:100%; padding:0.4rem; font-size:0.75rem; margin-bottom:4px;">Deep Focus / Flow</button>
+                        <button class="btn btn-secondary" onclick="setStressor(0.3, 0.5)" style="width:100%; padding:0.4rem; font-size:0.75rem;">Reset to Baseline</button>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Actuator Interactions</label>
+                        <button class="btn btn-outline" onclick="overrideActuator(20.5, 100, 32)" style="width:100%; padding:0.4rem; font-size:0.75rem; margin-bottom:4px;">Dim Light & Cool Room</button>
+                        <button class="btn btn-outline" onclick="overrideActuator(24.0, 500, 50)" style="width:100%; padding:0.4rem; font-size:0.75rem;">Bright Light & Warm Room</button>
+                    </div>
+                </div>
+            </details>
+
+            <div class="sidebar-section" style="margin-top: 1rem;">
+                <h3>Sensory Soundscape</h3>
+                <button class="btn btn-outline" id="audio-toggle" onclick="toggleAudio()" style="width: 100%;">🔊 Play Binaural Feed</button>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>RL Optimization Target</h3>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <button class="btn btn-success" id="target-focus-btn" onclick="setTargetState('Focus')" style="flex: 1; padding: 0.4rem 0.5rem; font-size: 0.75rem;">Focus Mode</button>
+                    <button class="btn btn-outline" id="target-calm-btn" onclick="setTargetState('Calm')" style="flex: 1; padding: 0.4rem 0.5rem; font-size: 0.75rem;">Calm Mode</button>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--color-text-sub); margin-bottom: 4px;">
+                    <span>RL Action: </span><strong style="color: var(--color-secondary);" id="rl-action-val">None</strong>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--color-text-sub);">
+                    <span>Step Reward: </span><strong style="color: var(--color-success);" id="rl-reward-val">0.0</strong>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Train H-SEF AI</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-outline" onclick="submitFeedback(1)" style="flex: 1; padding: 0.4rem 0.5rem; font-size: 0.75rem; border-color: rgba(5, 150, 105, 0.3); color: var(--color-success);">👍 Comfort</button>
+                    <button class="btn btn-outline" onclick="submitFeedback(-1)" style="flex: 1; padding: 0.4rem 0.5rem; font-size: 0.75rem; border-color: rgba(225, 29, 72, 0.3); color: var(--color-danger);">👎 Discomfort</button>
+                </div>
+            </div>
+
+            <!-- Credentials & Webhook Settings Drawer -->
+            <details class="drawer-card" style="margin-bottom: 1rem;">
+                <summary>IoT & Wearable Settings</summary>
+                <div class="drawer-content">
+                    <div class="webhook-endpoint-info" style="margin-bottom: 1rem;">
+                        <span class="endpoint-label" style="font-size: 0.7rem; font-weight: 600; color: var(--color-text-sub);">SMARTWATCH INGRESS URL:</span>
+                        <code class="endpoint-url" style="display: block; font-family: monospace; background: #0f172a; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; color: #38bdf8; word-break: break-all; margin-top: 4px;">POST /api/wearable/ingest</code>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0.75rem;">
+                        <label for="config-hue-ip" style="font-size: 0.65rem; font-weight:600; color:var(--color-text-sub);">Hue Bridge IP</label>
+                        <input type="text" id="config-hue-ip" placeholder="e.g. 192.168.1.50" style="width: 100%; font-size: 0.75rem; padding: 0.4rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0.75rem;">
+                        <label for="config-hue-key" style="font-size: 0.65rem; font-weight:600; color:var(--color-text-sub);">Hue API Key</label>
+                        <input type="password" id="config-hue-key" placeholder="Enter API Key" style="width: 100%; font-size: 0.75rem; padding: 0.4rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    </div>
+                    <button class="btn btn-outline save-btn" onclick="saveHardwareConfig()" style="width: 100%; font-size: 0.75rem; padding: 0.45rem;">Save Credentials</button>
+                </div>
+            </details>
+
+            <div class="sidebar-section system-status">
+                <h3>System Status</h3>
+                <div class="status-item">
+                    <span>WebSocket:</span>
+                    <span id="ws-status" class="status-badge disconnected">Disconnected</span>
+                </div>
+                <div class="status-item">
+                    <span>Wearable Hub:</span>
+                    <span id="wearable-status" class="status-badge disconnected">Disconnected</span>
+                </div>
+                <div class="status-item">
+                    <span>Philips Hue:</span>
+                    <span id="hue-status" class="status-badge disconnected">Disconnected</span>
+                </div>
+                <div class="status-item">
+                    <span>Home Assistant:</span>
+                    <span id="ha-status" class="status-badge disconnected">Disconnected</span>
+                </div>
+                <div class="status-item">
+                    <span>Circadian Phase:</span>
+                    <span id="circadian-val" class="status-text">Detecting...</span>
+                </div>
+                <div class="status-item">
+                    <span>Next Event:</span>
+                    <span id="next-event-val" class="status-text text-truncate">Syncing...</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <p>Designed by DeepMind Team</p>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard Workspace -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div>
+                    <h1>Environmental Co-Pilot Dashboard</h1>
+                    <p class="subtitle">Phase 5: Automated Closed-Loop Biophysical Pipeline</p>
+                </div>
+                <div class="header-status">
+                    <div class="header-stat">
+                        <span class="stat-label">Outdoor Weather</span>
+                        <span id="weather-val" class="stat-value">--</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Tab Navigation Header -->
+            <div class="tabs-nav">
+                <button class="tab-btn active" onclick="switchTab('input-tab', this)">
+                    <span class="tab-icon">📥</span> Input & AI Logic
+                </button>
+                <button class="tab-btn" onclick="switchTab('output-tab', this)">
+                    <span class="tab-icon">📤</span> Control Output & Actuators
+                </button>
+            </div>
+
+            <!-- PAGE 1: INPUT & AI LOGIC -->
+            <div id="input-tab" class="tab-content active">
+                <div class="tab-columns-grid">
+                    <!-- Left Column: Metrics & Waveforms -->
+                    <div class="tab-column">
+                        <div class="column-header">
+                            <h2>Biometric Intake</h2>
+                            <span class="pill">Real-time (50Hz)</span>
+                        </div>
+                        
+                        <div class="metrics-grid-compact">
+                            <div class="glass-card metric-card" id="card-hr">
+                                <div class="card-icon icon-red">♥</div>
+                                <div class="card-data">
+                                    <span class="card-label">Heart Rate</span>
+                                    <h2 class="card-value"><span id="hr-val">--</span> <span class="unit">BPM</span></h2>
+                                </div>
+                            </div>
+
+                            <div class="glass-card metric-card" id="card-hrv">
+                                <div class="card-icon icon-blue">⚡</div>
+                                <div class="card-data">
+                                    <span class="card-label">HRV (RMSSD)</span>
+                                    <h2 class="card-value"><span id="hrv-val">--</span> <span class="unit">ms</span></h2>
+                                </div>
+                            </div>
+
+                            <div class="glass-card metric-card" id="card-gsr">
+                                <div class="card-icon icon-amber">💧</div>
+                                <div class="card-data">
+                                    <span class="card-label">GSR Phasic</span>
+                                    <h2 class="card-value"><span id="gsr-val">--</span> <span class="unit">µS</span></h2>
+                                </div>
+                            </div>
+
+                            <div class="glass-card metric-card" id="card-load">
+                                <div class="card-icon icon-purple">🧠</div>
+                                <div class="card-data">
+                                    <span class="card-label">Cognitive Load</span>
+                                    <h2 class="card-value"><span id="load-val">--</span><span class="unit">%</span></h2>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Waveforms Line Chart -->
+                        <div class="glass-card compact-card">
+                            <div class="card-header">
+                                <h3>Raw & Filtered Bio-Signals</h3>
+                            </div>
+                            <div class="canvas-wrapper" style="height: 180px;">
+                                <canvas id="signalsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: CSM & Causal Logic -->
+                    <div class="tab-column">
+                        <div class="column-header">
+                            <h2>Cognitive Analysis</h2>
+                            <span class="pill glow">Active Optimization</span>
+                        </div>
+
+                        <!-- CSM Circumplex canvas -->
+                        <div class="glass-card compact-card">
+                            <div class="card-header">
+                                <h3>Cognitive State Model (CSM)</h3>
+                                <span class="pill glow" id="state-label">Baseline</span>
+                            </div>
+                            <div class="circumplex-body" style="height: 180px;">
+                                <div class="circumplex-grid" style="width: 170px; height: 170px;">
+                                    <canvas id="circumplexCanvas" width="170" height="170"></canvas>
+                                    <div class="circumplex-label label-top" style="top: -15px; font-size: 0.65rem;">Arousal (High)</div>
+                                    <div class="circumplex-label label-bottom" style="bottom: -15px; font-size: 0.65rem;">Arousal (Low)</div>
+                                    <div class="circumplex-label label-left" style="left: -50px; font-size: 0.65rem;">Valence (-)</div>
+                                    <div class="circumplex-label label-right" style="right: -50px; font-size: 0.65rem;">Valence (+)</div>
+                                    
+                                    <span class="quad-text quad-tr">Active Focus</span>
+                                    <span class="quad-text quad-tl">Stressed</span>
+                                    <span class="quad-text quad-br">Calm/Flow</span>
+                                    <span class="quad-text quad-bl">Fatigue</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Causal Attribution progress bars -->
+                        <div class="glass-card compact-card">
+                            <div class="card-header">
+                                <h3>Causal Stress Attribution</h3>
+                            </div>
+                            <div class="attribution-column-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <div class="attr-item">
+                                    <div class="attr-meta">
+                                        <span>Cognitive Workload</span>
+                                        <span id="attr-workload-val">--%</span>
+                                    </div>
+                                    <div class="progress-bar-container">
+                                        <div id="attr-workload" class="progress-bar bg-primary"></div>
+                                    </div>
+                                </div>
+                                <div class="attr-item">
+                                    <div class="attr-meta">
+                                        <span>Environment</span>
+                                        <span id="attr-env-val">--%</span>
+                                    </div>
+                                    <div class="progress-bar-container">
+                                        <div id="attr-env" class="progress-bar bg-secondary"></div>
+                                    </div>
+                                </div>
+                                <div class="attr-item">
+                                    <div class="attr-meta">
+                                        <span>Physiology</span>
+                                        <span id="attr-phys-val">--%</span>
+                                    </div>
+                                    <div class="progress-bar-container">
+                                        <div id="attr-phys" class="progress-bar bg-amber"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 2: CONTROL OUTPUT & ACTUATORS -->
+            <div id="output-tab" class="tab-content">
+                <div class="tab-columns-grid">
+                    <!-- Left Column: Ambient Stats & Actuators -->
+                    <div class="tab-column">
+                        <div class="column-header">
+                            <h2>Environmental Status</h2>
+                            <span class="pill">Sensor Readings</span>
+                        </div>
+
+                        <!-- Room Ambient Stats -->
+                        <div class="glass-card compact-card">
+                            <div class="card-header">
+                                <h3>Ambient Room Conditions</h3>
+                            </div>
+                            <div class="env-stats" style="margin-top: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div class="env-stat-item">
+                                    <span class="env-label">Temperature</span>
+                                    <div class="env-value-box" style="padding: 0.35rem 0.65rem; min-width: 70px; font-size: 0.85rem;"><span id="env-temp">--</span>°C</div>
+                                </div>
+                                <div class="env-stat-item">
+                                    <span class="env-label">Light Level</span>
+                                    <div class="env-value-box" style="padding: 0.35rem 0.65rem; min-width: 70px; font-size: 0.85rem;"><span id="env-light">--</span> Lux</div>
+                                </div>
+                                <div class="env-stat-item">
+                                    <span class="env-label">Ambient Noise</span>
+                                    <div class="env-value-box" style="padding: 0.35rem 0.65rem; min-width: 70px; font-size: 0.85rem;"><span id="env-noise">--</span> dB</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recommendations list -->
+                        <div class="glass-card compact-card highlight-card">
+                            <div class="card-header">
+                                <h3>Generative Sensory Outputs</h3>
+                            </div>
+                            <div class="recommendations-list" style="display: flex; flex-direction: column; gap: 0.5rem; grid-template-columns: 1fr;">
+                                <div class="rec-item" style="padding: 0.4rem 0.75rem; gap: 0.5rem;">
+                                    <span class="rec-icon" style="font-size: 1.1rem;">💡</span>
+                                    <div class="rec-details">
+                                        <span class="rec-title">Lighting Spectrum</span>
+                                        <span class="rec-value" id="rec-light" style="font-size: 0.78rem;">Loading...</span>
+                                    </div>
+                                </div>
+                                <div class="rec-item" style="padding: 0.4rem 0.75rem; gap: 0.5rem;">
+                                    <span class="rec-icon" style="font-size: 1.1rem;">🔊</span>
+                                    <div class="rec-details">
+                                        <span class="rec-title">Auditory Beats</span>
+                                        <span class="rec-value" id="rec-sound" style="font-size: 0.78rem;">Loading...</span>
+                                    </div>
+                                </div>
+                                <div class="rec-item" style="padding: 0.4rem 0.75rem; gap: 0.5rem;">
+                                    <span class="rec-icon" style="font-size: 1.1rem;">💨</span>
+                                    <div class="rec-details">
+                                        <span class="rec-title">Olfactory Scent</span>
+                                        <span class="rec-value" id="rec-scent" style="font-size: 0.78rem;">Loading...</span>
+                                    </div>
+                                </div>
+                                <!-- Hidden rec-temp node to prevent JS exceptions -->
+                                <div style="display:none;" id="rec-temp"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Prognosis & Outbound Logs -->
+                    <div class="tab-column">
+                        <div class="column-header">
+                            <h2>Actuator Control</h2>
+                            <span class="pill">IoT Dispatched</span>
+                        </div>
+
+                        <!-- Prognosis forecast -->
+                        <div class="glass-card compact-card">
+                            <div class="card-header">
+                                <h3>Intervention Prognosis</h3>
+                            </div>
+                            <div class="prognosis-box" style="margin-top: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div class="prog-item" style="padding: 0.5rem 0.75rem;">
+                                    <span class="prog-label">Expected Stress</span>
+                                    <div class="prog-value" id="prog-stress" style="font-size: 1.1rem;">--%</div>
+                                </div>
+                                <div class="prog-item" style="padding: 0.5rem 0.75rem;">
+                                    <span class="prog-label">Expected Cog Load</span>
+                                    <div class="prog-value" id="prog-load" style="font-size: 1.1rem;">--%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- IoT console command logs -->
+                        <div class="glass-card compact-card console-card" style="min-height: 200px;">
+                            <div class="card-header">
+                                <h3>Outbound Actuator Logs</h3>
+                                <span class="pill" id="safety-alert-val">Auto Allowed</span>
+                            </div>
+                            <div class="console-body" id="console-logs-body" style="height: 120px; font-size: 0.7rem; padding: 0.5rem 0.75rem;">
+[System] Initializing H-SEF Edge Orchestrator...
+[System] Standardized Actuators connected successfully.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>

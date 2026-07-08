@@ -1,0 +1,78 @@
+{
+  "Focus": [
+    {
+      "title": "More attentional focusing through binaural beats: evidence from the global-local task",
+      "year": 2015,
+      "source": "Psychological Research",
+      "doi": "https://doi.org/10.1007/s00426-015-0727-0",
+      "citations": 85,
+      "intervention": "Auditory: Binaural Beats (Gamma / 40Hz)",
+      "takeaway": "Gamma-frequency binaural beats enhance attentional control and selective focus."
+    },
+    {
+      "title": "Eliminating the Attentional Blink through Binaural Beats: A Case for Tailored Cognitive Enhancement",
+      "year": 2015,
+      "source": "Frontiers in Psychiatry",
+      "doi": "https://doi.org/10.3389/fpsyt.2015.00082",
+      "citations": 72,
+      "intervention": "Auditory: Binaural Beats",
+      "takeaway": "Binaural beat stimulation significantly reduces the attentional blink, facilitating rapid visual processing."
+    },
+    {
+      "title": "Prolonged Low-Level Exposure to the Aroma of Peppermint Essential Oil Enhances Aspects of Cognition and Mood in Healthy Adults",
+      "year": 2019,
+      "source": "American Journal of Plant Sciences",
+      "doi": "https://doi.org/10.4236/ajps.2019.106072",
+      "citations": 17,
+      "intervention": "Olfactory: Peppermint / Limonene",
+      "takeaway": "Peppermint inhalation enhances memory and alertness while improving task accuracy."
+    },
+    {
+      "title": "Effects of essential oils on central nervous system: Focus on mental health",
+      "year": 2020,
+      "source": "Phytotherapy Research",
+      "doi": "https://doi.org/10.1002/ptr.6854",
+      "citations": 148,
+      "intervention": "Olfactory: Limonene / Citral",
+      "takeaway": "Limonene inhalation shows strong central nervous system stimulation and mental fatigue reduction."
+    }
+  ],
+  "Calm": [
+    {
+      "title": "Efficacy of binaural auditory beats in cognition, anxiety, and pain perception: a meta-analysis",
+      "year": 2018,
+      "source": "Psychological Research",
+      "doi": "https://doi.org/10.1007/s00426-018-1066-8",
+      "citations": 188,
+      "intervention": "Auditory: Binaural Beats (Alpha/Theta / 10Hz)",
+      "takeaway": "Meta-analysis confirms binaural beats effectively decrease anxiety and enhance stress recovery."
+    },
+    {
+      "title": "A prospective, randomised, controlled study examining binaural beat audio and pre-operative anxiety in patients undergoing general anaesthesia for day case surgery",
+      "year": 2005,
+      "source": "Anaesthesia",
+      "doi": "https://doi.org/10.1111/j.1365-2044.2005.04287.x",
+      "citations": 195,
+      "intervention": "Auditory: Binaural Beats (Relaxation)",
+      "takeaway": "Binaural beat audio reduces pre-operative state anxiety by up to 26% compared to standard audio."
+    },
+    {
+      "title": "Exploring Pharmacological Mechanisms of Lavender (Lavandula angustifolia) Essential Oil on Central Nervous System Targets",
+      "year": 2017,
+      "source": "Frontiers in Pharmacology",
+      "doi": "https://doi.org/10.3389/fphar.2017.00280",
+      "citations": 302,
+      "intervention": "Olfactory: Lavender / Linalool",
+      "takeaway": "Lavender oil interacts with NMDA receptors and SERT, exerting potent anxiolytic effects without sedation."
+    },
+    {
+      "title": "Effects of lavender on anxiety: A systematic review and meta-analysis",
+      "year": 2019,
+      "source": "Phytomedicine",
+      "doi": "https://doi.org/10.1016/j.phymed.2019.153099",
+      "citations": 205,
+      "intervention": "Olfactory: Linalool / Linalyl acetate",
+      "takeaway": "Systematic review shows significant reduction in state anxiety and physiological markers (HR, cortisol) from lavender inhalation."
+    }
+  ]
+}
