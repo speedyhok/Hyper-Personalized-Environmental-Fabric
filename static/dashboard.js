@@ -1033,6 +1033,7 @@ function overrideActuator(temp, light, noise) {
 
 // YouTube Iframe Player API Handlers
 window.onYouTubeIframeAPIReady = function() {
+    console.log("[H-SEF Audio] YouTube Player API loaded successfully. Initializing...");
     ytPlayer = new YT.Player('yt-player-element', {
         height: '100%',
         width: '100%',
@@ -1050,6 +1051,15 @@ window.onYouTubeIframeAPIReady = function() {
         }
     });
 };
+
+// Dynamically load the YouTube IFrame API script to guarantee no race condition
+(function() {
+    console.log("[H-SEF Audio] Injecting YouTube Player API script dynamically...");
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+})();
 
 function onPlayerReady(event) {
     ytPlayerReady = true;
