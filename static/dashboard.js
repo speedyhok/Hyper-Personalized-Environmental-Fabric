@@ -180,8 +180,7 @@ function initRoom3D() {
     // --- Renderer ---
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setSize(W, H);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.enabled = false;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
 
@@ -491,10 +490,7 @@ function initRoom3D() {
     // Ceiling Pendant Point Light (the main dynamic light)
     const ceilLight = new THREE.PointLight(0xffd89b, 2.8, 12);
     ceilLight.position.set(0, 3.2, -2.0);
-    ceilLight.castShadow = true;
-    ceilLight.shadow.mapSize.width  = 1024;
-    ceilLight.shadow.mapSize.height = 1024;
-    ceilLight.shadow.bias = -0.001;
+    ceilLight.castShadow = false;
     scene.add(ceilLight);
 
     // Under-Desk LED mood wash light (creates a beautiful dynamic wash on the back feature wall)
