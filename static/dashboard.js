@@ -1054,6 +1054,11 @@ function switchTab(tabId, buttonElement) {
             signalsChart.resize();
             signalsChart.update();
         });
+    } else if (tabId === 'output-tab') {
+        requestAnimationFrame(() => {
+            window.dispatchEvent(new Event('resize'));
+        });
     }
 }
+
 
