@@ -22,6 +22,15 @@ let isAudioPlaying = false;
 let currentCarrierFreq = 180;
 let currentBinauralOffset = 15;
 
+// Premium ambient soundscape synthesizer nodes
+let noiseSource = null;
+let noiseGain = null;
+let filterNode = null;
+let padOsc1 = null;
+let padOsc2 = null;
+let padGain = null;
+
+
 // 3D Room state
 let room3d = null;
 
@@ -151,6 +160,7 @@ function initChart() {
 // 3D ROOM VISUALIZATION  (Three.js - High Aesthetic Upgrade)
 // ============================================================
 let underDeskLight = null; // additional mood light for back wall wash
+let behindSofaLight = null; // wall wash behind the sofa
 
 function initRoom3D() {
     const canvas = document.getElementById('room3d-canvas');
@@ -169,31 +179,30 @@ function initRoom3D() {
 
     // --- Scene ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f172a); // dark backdrop
-    scene.fog = new THREE.FogExp2(0x0f172a, 0.025);
+    scene.background = new THREE.Color(0x0a0f1d); // deep premium midnight base
+    scene.fog = new THREE.FogExp2(0x0a0f1d, 0.03);
 
     // --- Camera (Premium 3/4 Corner Perspective) ---
-    const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 50);
-    camera.position.set(4.5, 3.4, 6.2);
-    camera.lookAt(-0.25, 1.25, -1.2);
+    const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 50);
+    camera.position.set(4.8, 3.2, 5.8);
+    camera.lookAt(-0.3, 1.2, -1.1);
 
     // --- Materials (Premium Design Palette) ---
-    const floorMat  = new THREE.MeshStandardMaterial({ color: 0xdfd3c3, roughness: 0.65, metalness: 0.05 }); // Light Oak
-    const wallMat   = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 }); // Slate Dark Blue feature wall
-    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.92 }); // Accent wall
+    const floorMat  = new THREE.MeshStandardMaterial({ color: 0xdfd3c3, roughness: 0.6, metalness: 0.05 }); // Light Oak
+    const wallMat   = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.95 }); // Slate Dark feature wall
+    const wallSideMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.95 }); // Accent walls
     const ceilMat   = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 1.0 });
-    const woodMat   = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.6 }); // Dark Walnut
-    const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.15, metalness: 0.1 }); // White Marble desk top
-    const brassMat  = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.25, metalness: 0.85 }); // Brushed Gold/Brass
-    const darkMat   = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.45, metalness: 0.2 }); // Matte Black
-    const screenMat = new THREE.MeshStandardMaterial({ color: 0x090d16, emissive: 0x0c1424, emissiveIntensity: 0.8, roughness: 0.2 }); // Curved OLED display
-    const plantMat  = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.8, side: THREE.DoubleSide }); // Green leaves
-    const potMat    = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3 }); // White Ceramic planter
-    const sofaMat   = new THREE.MeshStandardMaterial({ color: 0xf5f5f4, roughness: 0.9 }); // Luxury Cream Bouclé fabric
-    const rugMat    = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 1.0 }); // Soft gray woven rug
-    const diffMat   = new THREE.MeshStandardMaterial({ color: 0xfafafa, transparent: true, opacity: 0.9, roughness: 0.15, metalness: 0.1 }); // Opal glass diffuser
-    const lampShade = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 }); // Black metal shade
-    const lampInner = new THREE.MeshStandardMaterial({ color: 0xffd89b, emissive: 0xffb74d, emissiveIntensity: 1.2 }); // Warm brass reflector
+    const woodMat   = new THREE.MeshStandardMaterial({ color: 0x452a1e, roughness: 0.7 }); // Premium Dark Walnut
+    const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.1, metalness: 0.15 }); // White Carrara marble
+    const brassMat  = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.2, metalness: 0.9 }); // Brushed Gold/Brass
+    const darkMat   = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5, metalness: 0.3 }); // Matte Black
+    const screenMat = new THREE.MeshStandardMaterial({ color: 0x090d16, emissive: 0x0c1424, emissiveIntensity: 1.2, roughness: 0.2 }); // Curved OLED display
+    const plantMat  = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85, side: THREE.DoubleSide }); // Fiddle-leaf green
+    const potMat    = new THREE.MeshStandardMaterial({ color: 0xf3f4f6, roughness: 0.4 }); // White Ceramic planter
+    const sofaMat   = new THREE.MeshStandardMaterial({ color: 0xf5f5f4, roughness: 0.9 }); // Cream Bouclé fabric
+    const rugMat    = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 1.0 }); // Soft woven rug
+    const diffMat   = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.92, roughness: 0.1 }); // Opal glass diffuser
+    const globeMat   = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.2, roughness: 0.1 }); // Light globe
 
     // --- Room Geometry ---
     // Floor
@@ -201,9 +210,9 @@ function initRoom3D() {
     floor.position.set(0, -0.05, 0); floor.receiveShadow = true;
     scene.add(floor);
 
-    // Large Woven Rug (Circular, centers the lounge area)
-    const rug = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 0.015, 32), rugMat);
-    rug.position.set(-0.8, 0.008, -1.0); rug.receiveShadow = true;
+    // Woven Rug (Circular)
+    const rug = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 0.01, 32), rugMat);
+    rug.position.set(-0.8, 0.005, -1.0); rug.receiveShadow = true;
     scene.add(rug);
 
     // Back wall
@@ -237,31 +246,52 @@ function initRoom3D() {
     scene.add(windowGlass);
 
     // Dynamic Outside window lighting (ambient sky glow)
-    const windowLight = new THREE.RectAreaLight(0x38bdf8, 3.5, 2.2, 3.6);
+    const windowLight = new THREE.RectAreaLight(0x38bdf8, 4.0, 2.2, 3.6);
     windowLight.position.set(-2.8, 1.9, -4.8);
     windowLight.lookAt(-2.8, 1.9, 0);
     scene.add(windowLight);
 
-    // --- Modern Framed Abstract Wall Art ---
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.2, 0.06), brassMat);
-    frame.position.set(1.4, 2.7, -4.94); frame.castShadow = true;
-    scene.add(frame);
+    // --- Modern Flat Painting Frame (CanvasTexture - Fixes 3D overlap distortion) ---
+    const frameWidth = 1.6;
+    const frameHeight = 2.2;
+    const frameMesh = new THREE.Mesh(new THREE.BoxGeometry(frameWidth, frameHeight, 0.06), brassMat);
+    frameMesh.position.set(1.4, 2.7, -4.94); frameMesh.castShadow = true;
+    scene.add(frameMesh);
 
-    const canvasMesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.1, 0.02), new THREE.MeshStandardMaterial({ color: 0xfaeed1, roughness: 0.95 }));
-    canvasMesh.position.set(1.4, 2.7, -4.92);
-    scene.add(canvasMesh);
+    // Draw the abstract painting dynamically onto a 2D canvas texture
+    const artCanvas = document.createElement('canvas');
+    artCanvas.width = 512;
+    artCanvas.height = 704;
+    const artCtx = artCanvas.getContext('2d');
+    
+    // Abstract Art Background
+    artCtx.fillStyle = '#faf8f5';
+    artCtx.fillRect(0, 0, 512, 704);
+    
+    // Abstract overlapping circles & lines (sleek modern gallery poster style)
+    artCtx.fillStyle = '#ccd5ae';
+    artCtx.beginPath(); artCtx.arc(200, 280, 160, 0, Math.PI * 2); artCtx.fill();
+    
+    artCtx.fillStyle = '#d4a373';
+    artCtx.beginPath(); artCtx.arc(320, 420, 140, 0, Math.PI * 2); artCtx.fill();
+    
+    artCtx.fillStyle = '#b3c5af';
+    artCtx.beginPath(); artCtx.arc(240, 500, 90, 0, Math.PI * 2); artCtx.fill();
+    
+    artCtx.strokeStyle = '#1e293b';
+    artCtx.lineWidth = 6;
+    artCtx.beginPath(); artCtx.arc(256, 352, 220, 0, Math.PI, true); artCtx.stroke();
+    
+    artCtx.fillStyle = '#e9d8a6';
+    artCtx.beginPath(); artCtx.arc(256, 352, 30, 0, Math.PI * 2); artCtx.fill();
 
-    // Simple abstract geometric colored planes on art canvas
-    const artColors = [0xb3c5af, 0xd4a373, 0xccd5ae, 0xe9d8a6];
-    artColors.forEach((color, i) => {
-        const shape = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.5 + i*0.2, 0.4 + i*0.3),
-            new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })
-        );
-        shape.position.set(1.4 + (i-1.5)*0.25, 2.7 + (i-1.5)*0.18, -4.90 + i*0.002);
-        shape.rotation.z = i * 0.25;
-        scene.add(shape);
-    });
+    const artTexture = new THREE.CanvasTexture(artCanvas);
+    const painting = new THREE.Mesh(
+        new THREE.PlaneGeometry(frameWidth - 0.08, frameHeight - 0.08),
+        new THREE.MeshStandardMaterial({ map: artTexture, roughness: 0.9 })
+    );
+    painting.position.set(1.4, 2.7, -4.9);
+    scene.add(painting);
 
     // --- Premium Floating Marble & Brass Desk ---
     const deskTop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 0.9), marbleMat);
@@ -302,7 +332,7 @@ function initRoom3D() {
     chairSeat.position.set(1.4, 0.78, -2.8); chairSeat.castShadow = true;
     scene.add(chairSeat);
     const chairCushion = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.06, 0.44),
-        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 }));
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 }));
     chairCushion.position.set(1.4, 0.85, -2.8);
     scene.add(chairCushion);
     const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.45, 0.06), woodMat);
@@ -391,7 +421,7 @@ function initRoom3D() {
     trunk.position.set(0, 0.7, 0); trunk.castShadow = true;
     plantGroup.add(trunk);
 
-    // Create 8 custom leaves at varying positions
+    // Create 9 custom leaves at varying positions
     for (let l = 0; l < 9; l++) {
         const branchY = 0.4 + l*0.12;
         const scale = 0.25 + l*0.03;
@@ -425,16 +455,16 @@ function initRoom3D() {
     scene.add(diff);
 
     // --- Premium Spherical Ambient Pendant Ceiling Lamp ---
-    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.4, 8), brassMat);
-    rod.position.set(0, 4.3, -2.0);
-    scene.add(rod);
+    // Added black cable cord and brass cap to remove floating illusion
+    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1.4, 8), darkMat);
+    cord.position.set(0, 4.35, -2.0);
+    scene.add(cord);
 
     const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.06, 12), brassMat);
     collar.position.set(0, 3.55, -2.0);
     scene.add(collar);
 
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.24, 32, 32),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.1 }));
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.24, 32, 32), globeMat);
     globe.position.set(0, 3.32, -2.0);
     scene.add(globe);
 
@@ -449,7 +479,7 @@ function initRoom3D() {
 
     // --- Lights (Coordinated Multi-Source Setup) ---
     // Soft overhead ambient light
-    const ambient = new THREE.AmbientLight(0x1e293b, 0.25);
+    const ambient = new THREE.AmbientLight(0x0f172a, 0.25);
     scene.add(ambient);
 
     // Ceiling Pendant Point Light (the main dynamic light)
@@ -466,10 +496,10 @@ function initRoom3D() {
     underDeskLight.position.set(1.4, 1.02, -3.95);
     scene.add(underDeskLight);
 
-    // Soft warm fill light from front-left to ensure shadows aren't completely pitch black
-    const fillLight = new THREE.PointLight(0xfff1e0, 0.8, 10);
-    fillLight.position.set(-2.0, 2.5, 3.0);
-    scene.add(fillLight);
+    // Behind-Sofa LED wall wash light (secondary dynamic mood source)
+    behindSofaLight = new THREE.PointLight(0xffd89b, 1.8, 4.5);
+    behindSofaLight.position.set(-2.0, 0.45, -2.95);
+    scene.add(behindSofaLight);
 
     // --- Swirling Scent Mist Particles ---
     const PARTICLE_COUNT = 80;
@@ -530,13 +560,17 @@ function initRoom3D() {
         requestAnimationFrame(animate);
         const t = clock.getElapsedTime();
 
-        // 1. Lerp main pendant light and under-desk LED strip
+        // 1. Lerp main pendant light, under-desk light, behind-sofa light and ambient color
         ceilLight.color.lerp(targetLightColor, 0.025);
         underDeskLight.color.lerp(targetLightColor, 0.025);
+        behindSofaLight.color.lerp(targetLightColor, 0.025);
+        ambient.color.lerp(targetLightColor, 0.025);
         globe.material.emissive.lerp(targetLightColor, 0.025);
+        globe.material.color.lerp(targetLightColor, 0.025); // Globe body tint
         
         ceilLight.intensity += (targetLightIntensity - ceilLight.intensity) * 0.025;
-        underDeskLight.intensity += (targetLightIntensity*0.75 - underDeskLight.intensity) * 0.025;
+        underDeskLight.intensity += (targetLightIntensity*0.85 - underDeskLight.intensity) * 0.025;
+        behindSofaLight.intensity += (targetLightIntensity*0.75 - behindSofaLight.intensity) * 0.025;
 
         // 2. Swirling scent mist (helical path animation)
         const pos = particles.geometry.attributes.position;
@@ -574,9 +608,9 @@ function initRoom3D() {
         });
 
         // 4. Smooth floating camera sway
-        camera.position.x = 4.5 + Math.sin(t * 0.08) * 0.18;
-        camera.position.y = 3.4 + Math.sin(t * 0.12) * 0.06;
-        camera.lookAt(-0.25, 1.25, -1.2);
+        camera.position.x = 4.8 + Math.sin(t * 0.08) * 0.18;
+        camera.position.y = 3.2 + Math.sin(t * 0.12) * 0.06;
+        camera.lookAt(-0.3, 1.2, -1.1);
 
         renderer.render(scene, camera);
     }
@@ -586,6 +620,7 @@ function initRoom3D() {
     room3d = {
         ceilLight,
         underDeskLight,
+        behindSofaLight,
         ambient,
         windowLight,
         scene,
@@ -610,15 +645,21 @@ function initRoom3D() {
             else if (scentName && scentName.toLowerCase().includes('jasmine')) targetParticleColor.set(0xfbcfe8);
             else targetParticleColor.set(0xc4b5fd); // Lavender calming
 
-            // window ambient color (based on outdoor weather temp)
+            // Dynamic Window Sky Glow: changes color with outdoor weather temperature
+            // Cold temperatures: crisp light blue. Warm/hot temperatures: summer golden sunset tint.
             const wTemp = Math.max(0, Math.min(1, (tempC - 10) / 30));
-            windowLight.color.setRGB(0.53 + wTemp * 0.2, 0.81 - wTemp * 0.1, 0.94 - wTemp * 0.3);
+            // Lerp window light between blue (0.2, 0.6, 0.95) and warm gold (0.95, 0.6, 0.2)
+            const wr = 0.2 + wTemp * 0.75;
+            const wg = 0.6;
+            const wb = 0.95 - wTemp * 0.75;
+            windowLight.color.setRGB(wr, wg, wb);
             
             // Screen content reacts to the mood light
             screenMat.emissive.setRGB(r*0.12, g*0.12, b*0.2);
         }
     };
 }
+
 
 // Called every WebSocket tick to sync room with live data
 function updateRoom3D(data) {
@@ -850,6 +891,10 @@ function updateUI(data) {
     if (isAudioPlaying && leftOsc && rightOsc) {
         leftOsc.frequency.setValueAtTime(currentCarrierFreq, audioCtx.currentTime);
         rightOsc.frequency.setValueAtTime(currentCarrierFreq + currentBinauralOffset, audioCtx.currentTime);
+        if (padOsc1 && padOsc2) {
+            padOsc1.frequency.setValueAtTime(currentCarrierFreq * 0.5, audioCtx.currentTime);
+            padOsc2.frequency.setValueAtTime(currentCarrierFreq * 0.5 + 1.2, audioCtx.currentTime);
+        }
     }
     
     // Dynamic Ambient Lighting Glow
@@ -996,9 +1041,18 @@ function toggleAudio() {
         btn.className = "btn btn-danger";
         isAudioPlaying = true;
     } else {
-        if (leftOsc) leftOsc.stop();
-        if (rightOsc) rightOsc.stop();
-        if (audioCtx) audioCtx.close();
+        try {
+            if (leftOsc) leftOsc.stop();
+            if (rightOsc) rightOsc.stop();
+            if (noiseSource) noiseSource.stop();
+            if (padOsc1) padOsc1.stop();
+            if (padOsc2) padOsc2.stop();
+        } catch (e) {
+            console.warn("Audio stop error:", e);
+        }
+        if (audioCtx) {
+            audioCtx.close();
+        }
         btn.textContent = "🔊 Play Binaural Feed";
         btn.className = "btn btn-outline";
         isAudioPlaying = false;
@@ -1008,39 +1062,91 @@ function toggleAudio() {
 function initAudio() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
-    // Create oscillators
+    // 1. Create a Master Lowpass Filter to soften the raw binaural tones
+    filterNode = audioCtx.createBiquadFilter();
+    filterNode.type = "lowpass";
+    filterNode.frequency.setValueAtTime(150, audioCtx.currentTime); // Low cutoff filters out harsh high frequencies
+    
+    // 2. Create Left and Right Oscillators for the Binaural beats
     leftOsc = audioCtx.createOscillator();
     rightOsc = audioCtx.createOscillator();
-    
     leftOsc.type = "sine";
     rightOsc.type = "sine";
-    
     leftOsc.frequency.setValueAtTime(currentCarrierFreq, audioCtx.currentTime);
     rightOsc.frequency.setValueAtTime(currentCarrierFreq + currentBinauralOffset, audioCtx.currentTime);
     
-    // Create stereo panners
+    // 3. Setup Stereo Panners for spatial isolation (Left/Right ears)
     const leftPanner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
     const rightPanner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
     
-    // Fallback if panners are not supported (mono-ish mixing)
     gainNode = audioCtx.createGain();
-    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime); // Low volume for comfort
+    gainNode.gain.setValueAtTime(0.025, audioCtx.currentTime); // Very soft volume for comfortable listening
     
     if (leftPanner && rightPanner) {
-        leftPanner.pan.setValueAtTime(-1, audioCtx.currentTime); // Full Left
-        rightPanner.pan.setValueAtTime(1, audioCtx.currentTime);  // Full Right
+        leftPanner.pan.setValueAtTime(-1, audioCtx.currentTime);
+        rightPanner.pan.setValueAtTime(1, audioCtx.currentTime);
         
-        leftOsc.connect(leftPanner).connect(gainNode);
-        rightOsc.connect(rightPanner).connect(gainNode);
+        leftOsc.connect(leftPanner).connect(filterNode);
+        rightOsc.connect(rightPanner).connect(filterNode);
     } else {
-        leftOsc.connect(gainNode);
-        rightOsc.connect(gainNode);
+        leftOsc.connect(filterNode);
+        rightOsc.connect(filterNode);
+    }
+    filterNode.connect(gainNode).connect(audioCtx.destination);
+    
+    // 4. Create Soothing Brownian Noise (Ocean Waves/Rain Sound Masking)
+    const bufferSize = 4 * audioCtx.sampleRate;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        // Brownian noise filter
+        output[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = output[i];
+        output[i] *= 3.5; // Compensate for volume drop
     }
     
-    gainNode.connect(audioCtx.destination);
+    noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+    noiseSource.loop = true;
     
+    noiseGain = audioCtx.createGain();
+    // Subtly mask the tones with an ambient ocean rain backdrop
+    noiseGain.gain.setValueAtTime(0.015, audioCtx.currentTime);
+    
+    // Create a lowpass filter for the noise as well to make it extra deep and warm
+    const noiseFilter = audioCtx.createBiquadFilter();
+    noiseFilter.type = "lowpass";
+    noiseFilter.frequency.setValueAtTime(400, audioCtx.currentTime); // Deep rumbling rain
+    
+    noiseSource.connect(noiseFilter).connect(noiseGain).connect(audioCtx.destination);
+    
+    // 5. Create detuned warm ambient synthesiser pads
+    padOsc1 = audioCtx.createOscillator();
+    padOsc2 = audioCtx.createOscillator();
+    padOsc1.type = "triangle"; // Softer than saw/square
+    padOsc2.type = "triangle";
+    padOsc1.frequency.setValueAtTime(currentCarrierFreq * 0.5, audioCtx.currentTime); // Low octave
+    padOsc2.frequency.setValueAtTime(currentCarrierFreq * 0.5 + 1.2, audioCtx.currentTime); // Detune
+    
+    const padFilter = audioCtx.createBiquadFilter();
+    padFilter.type = "lowpass";
+    padFilter.frequency.setValueAtTime(110, audioCtx.currentTime); // Extra low-pass filters pad
+    
+    padGain = audioCtx.createGain();
+    padGain.gain.setValueAtTime(0.035, audioCtx.currentTime);
+    
+    padOsc1.connect(padFilter);
+    padOsc2.connect(padFilter);
+    padFilter.connect(padGain).connect(audioCtx.destination);
+    
+    // Start all sound generators
     leftOsc.start();
     rightOsc.start();
+    noiseSource.start();
+    padOsc1.start();
+    padOsc2.start();
 }
 
 function setTargetState(target) {
