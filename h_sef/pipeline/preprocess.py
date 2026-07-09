@@ -65,7 +65,7 @@ class SignalPreprocessor:
             if band not in self.ema_eeg:
                 self.ema_eeg[band] = val
             else:
-                self.ema_eeg[band] = 0.25 * val + 0.75 * self.ema_eeg[band]
+                self.ema_eeg[band] = 0.05 * val + 0.95 * self.ema_eeg[band]
             relative_powers[band] = self.ema_eeg[band]
 
         return relative_powers
@@ -121,12 +121,12 @@ class SignalPreprocessor:
         if self.ema_hr is None:
             self.ema_hr = hr_clipped
         else:
-            self.ema_hr = 0.12 * hr_clipped + 0.88 * self.ema_hr
+            self.ema_hr = 0.03 * hr_clipped + 0.97 * self.ema_hr
             
         if self.ema_rmssd is None:
             self.ema_rmssd = rmssd_clipped
         else:
-            self.ema_rmssd = 0.12 * rmssd_clipped + 0.88 * self.ema_rmssd
+            self.ema_rmssd = 0.03 * rmssd_clipped + 0.97 * self.ema_rmssd
             
         features["hr"] = self.ema_hr
         features["rmssd"] = self.ema_rmssd
@@ -177,12 +177,12 @@ class SignalPreprocessor:
         if self.ema_tonic is None:
             self.ema_tonic = t_val
         else:
-            self.ema_tonic = 0.08 * t_val + 0.92 * self.ema_tonic
+            self.ema_tonic = 0.02 * t_val + 0.98 * self.ema_tonic
             
         if self.ema_phasic is None:
             self.ema_phasic = p_val
         else:
-            self.ema_phasic = 0.15 * p_val + 0.85 * self.ema_phasic
+            self.ema_phasic = 0.04 * p_val + 0.96 * self.ema_phasic
 
         return {
             "gsr_clean": float(clean_gsr[-1]),
