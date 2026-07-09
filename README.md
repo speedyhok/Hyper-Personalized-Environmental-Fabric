@@ -8,7 +8,7 @@ An automated, closed-loop biophysical pipeline and intelligent control system th
 * **Developer/Author**: Mohibul Hoque
 * **Email**: [hokworks@gmail.com](mailto:hokworks@gmail.com)
 * **LinkedIn**: [linkedin.com/in/speedymohibul](https://linkedin.com/in/speedymohibul)
-* **GitHub Repository**: [speedyhok/Hyper-Personalized-Environmental-Fabric](https://github.com/speedyhok/Hyper-Personalized-Environmental-Fabric)
+* **Live Website**: [hyper-personalized-environmental-fabric.onrender.com](https://hyper-personalized-environmental-fabric.onrender.com/)
 
 ---
 
