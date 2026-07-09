@@ -1,5 +1,8 @@
 # h_sef/models/csm_core.py
 """
+Developer: Mohibul Hoque (hokworks@gmail.com)
+LinkedIn: linkedin.com/in/speedymohibul
+
 Cognitive State Modeling (CSM) Core.
 Implements:
 1. Deep Causal Inference Network (PyTorch LSTM) for temporal sequence prediction.

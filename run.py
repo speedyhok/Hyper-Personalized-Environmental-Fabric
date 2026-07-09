@@ -1,5 +1,8 @@
 # run.py
 """
+Developer: Mohibul Hoque (hokworks@gmail.com)
+LinkedIn: linkedin.com/in/speedymohibul
+
 Entry point to run the H-SEF real-time processing pipeline and dashboard.
 Starts the FastAPI application on http://127.0.0.1:8000
 """

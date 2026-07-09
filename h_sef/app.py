@@ -1,5 +1,8 @@
 # h_sef/app.py
 """
+Developer: Mohibul Hoque (hokworks@gmail.com)
+LinkedIn: linkedin.com/in/speedymohibul
+
 FastAPI application for H-SEF.
 Aggregates the streaming, synchronization, preprocessing, mapping, and context components.
 Serves a WebSocket endpoint with real-time analytics and REST endpoints for simulation interaction.

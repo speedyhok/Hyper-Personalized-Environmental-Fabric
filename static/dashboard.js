@@ -1,4 +1,8 @@
 // static/dashboard.js
+/**
+ * Developer: Mohibul Hoque (hokworks@gmail.com)
+ * LinkedIn: linkedin.com/in/speedymohibul
+ */
 
 let socket = null;
 let signalsChart = null;
