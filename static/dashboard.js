@@ -167,9 +167,6 @@ function initChart() {
 // ============================================================
 // 3D ROOM VISUALIZATION  (Three.js - High Aesthetic Upgrade)
 // ============================================================
-let underDeskLight = null; // additional mood light for back wall wash
-let behindSofaLight = null; // wall wash behind the sofa
-
 function initRoom3D() {
     const canvas = document.getElementById('room3d-canvas');
     if (!canvas || typeof THREE === 'undefined') return;
@@ -251,11 +248,7 @@ function initRoom3D() {
     windowGlass.position.set(-2.8, 1.9, -4.93);
     scene.add(windowGlass);
 
-    // Dynamic Outside window lighting (ambient sky glow - dimmed to prevent glare)
-    const windowLight = new THREE.RectAreaLight(0x38bdf8, 0.8, 2.2, 3.6);
-    windowLight.position.set(-2.8, 1.9, -4.8);
-    windowLight.lookAt(-2.8, 1.9, 0);
-    scene.add(windowLight);
+
 
     // --- Modern Flat Painting Frame (CanvasTexture - Fixes 3D overlap distortion) ---
     const frameWidth = 1.6;
@@ -483,25 +476,11 @@ function initRoom3D() {
     spkrCone.position.set(0.4, 1.25, -3.6);
     scene.add(spkrCone);
 
-    // Soft overhead ambient light (dimmed down to prevent overexposure)
-    const ambient = new THREE.AmbientLight(0x1e293b, 0.35);
-    scene.add(ambient);
-
     // Ceiling Pendant Point Light (the main dynamic light)
     const ceilLight = new THREE.PointLight(0xffd89b, 2.8, 12);
     ceilLight.position.set(0, 3.2, -2.0);
     ceilLight.castShadow = false;
     scene.add(ceilLight);
-
-    // Under-Desk LED mood wash light (creates a beautiful dynamic wash on the back feature wall)
-    underDeskLight = new THREE.PointLight(0xffd89b, 2.0, 5);
-    underDeskLight.position.set(1.4, 1.45, -3.8); // Shifted up to clear desk shadows
-    scene.add(underDeskLight);
-
-    // Behind-Sofa LED wall wash light (secondary dynamic mood source)
-    behindSofaLight = new THREE.PointLight(0xffd89b, 1.8, 4.5);
-    behindSofaLight.position.set(-2.0, 0.95, -2.85); // Shifted up to clear sofa backrest shadows
-    scene.add(behindSofaLight);
 
     // --- Swirling Scent Mist Particles ---
     const PARTICLE_COUNT = 80;
@@ -562,17 +541,12 @@ function initRoom3D() {
         requestAnimationFrame(animate);
         const t = clock.getElapsedTime();
 
-        // 1. Update main pendant light, under-desk light, behind-sofa light and ambient color instantly
+        // 1. Update main pendant light and globe emissive color instantly
         ceilLight.color.copy(targetLightColor);
-        underDeskLight.color.copy(targetLightColor);
-        behindSofaLight.color.copy(targetLightColor);
-        ambient.color.copy(targetLightColor);
         globe.material.emissive.copy(targetLightColor);
         globe.material.color.copy(targetLightColor); // Globe body tint
         
         ceilLight.intensity = targetLightIntensity;
-        underDeskLight.intensity = targetLightIntensity * 1.6;
-        behindSofaLight.intensity = targetLightIntensity * 1.4;
 
         // 2. Swirling scent mist (helical path animation)
         const pos = particles.geometry.attributes.position;
@@ -621,10 +595,6 @@ function initRoom3D() {
     // Store references
     room3d = {
         ceilLight,
-        underDeskLight,
-        behindSofaLight,
-        ambient,
-        windowLight,
         scene,
         pMat,
         particles,
@@ -633,8 +603,8 @@ function initRoom3D() {
             const r = rgb[0]/255, g = rgb[1]/255, b = rgb[2]/255;
             targetLightColor.setRGB(r, g, b);
             
-            // Scaled intensity (physically-based lumens scale adjusted down to prevent overexposure)
-            targetLightIntensity = 18.0 + (lux / 400.0) * 32.0;
+            // Scaled intensity (adjusted for single point light illumination)
+            targetLightIntensity = 24.0 + (lux / 400.0) * 36.0;
             soundActive = soundOn;
             
             // Adjust scent intensity
@@ -646,15 +616,6 @@ function initRoom3D() {
             else if (scentName && scentName.toLowerCase().includes('pine')) targetParticleColor.set(0x86efac);
             else if (scentName && scentName.toLowerCase().includes('jasmine')) targetParticleColor.set(0xfbcfe8);
             else targetParticleColor.set(0xc4b5fd); // Lavender calming
-
-            // Dynamic Window Sky Glow: changes color with outdoor weather temperature
-            // Cold temperatures: crisp light blue. Warm/hot temperatures: summer golden sunset tint.
-            const wTemp = Math.max(0, Math.min(1, (tempC - 10) / 30));
-            // Lerp window light between blue (0.2, 0.6, 0.95) and warm gold (0.95, 0.6, 0.2)
-            const wr = 0.2 + wTemp * 0.75;
-            const wg = 0.6;
-            const wb = 0.95 - wTemp * 0.75;
-            windowLight.color.setRGB(wr, wg, wb);
             
             // Screen content reacts to the mood light
             screenMat.emissive.setRGB(r*0.12, g*0.12, b*0.2);
