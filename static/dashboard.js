@@ -596,7 +596,7 @@ function initRoom3D() {
             }
         }
         pos.needsUpdate = true;
-        pMat.color.lerp(targetParticleColor, 0.05);
+        pMat.color.copy(targetParticleColor);
 
         // 3. Sound rings pulsing
         rings.forEach((ring) => {
